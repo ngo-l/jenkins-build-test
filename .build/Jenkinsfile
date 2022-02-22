@@ -41,10 +41,11 @@ volumes: [
 //       }
 //     }
     stage('Build') {
-      container('buildsh') {
-           withCredentials([file(credentialsId: "${GIT_KEY}", variable: 'FILE')]) {
-                sh "cp $FILE /mnt/"
-           }
+//     container('buildsh') {
+//            withCredentials([file(credentialsId: "${GIT_KEY}", variable: 'FILE')]) {
+//                 sh "cp $FILE /mnt/"
+//            }
+        println("$GIT_KEY")
         sh "ls /mnt"
         sh "rm /mnt/test.txt"
       }
