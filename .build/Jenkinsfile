@@ -41,7 +41,7 @@ volumes: [
 //       }
 //     }
     stage('Build') {
-//     container('buildsh') {
+    container('buildsh') {
 //            withCredentials([file(credentialsId: "${GIT_KEY}", variable: 'FILE')]) {
 //                 sh "cp $FILE /mnt/"
 //            }
