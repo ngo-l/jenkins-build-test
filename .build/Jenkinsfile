@@ -1,15 +1,8 @@
 properties([pipelineTriggers([githubPush()])])
 def label = "worker-${UUID.randomUUID().toString()}"
 
-environment {
-
-GIT_KEY = "stg-aks"
-
-}
-
-
 podTemplate(label: label, containers: [
-  containerTemplate(name: 'podman', image: 'ngol/podman:v1', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'buildah', image: 'ngol/buildah:v1', command: 'cat', imagePullPolicy: 'Always' , privileged: true, ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.8', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:latest', command: 'cat', ttyEnabled: true)
 ],
@@ -17,51 +10,22 @@ volumes: [
   hostPathVolume(mountPath: '/mnt', hostPath: '/mnt')
 ]) {
   node(label) {
-       git url: "https://github.com/ngo-l/jenkins-demo",branch: 'master'
-//     def myRepo = checkout scm
-//     def gitCommit = myRepo.GIT_COMMIT
-//     def gitBranch = myRepo.GIT_BRANCH
-//     def shortGitCommit = "${gitCommit[0..10]}"
-//     def previousGitCommit = sh(script: "git rev-parse ${gitCommit}~", returnStdout: true)
-//
-//     stage('Test') {
-//       try {
-//         container('buildsh') {
-//           sh """
-//             pwd
-//             echo "GIT_BRANCH=${gitBranch}" >> /etc/environment
-//             echo "GIT_COMMIT=${gitCommit}" >> /etc/environment
-//             cat /etc/*release*
-//             """
-//         }
-//       }
-//       catch (exc) {
-//         println "Failed to test - ${currentBuild.fullDisplayName}"
-//         throw(exc)
-//       }
-//     }
+       git url: "https://github.com/ngo-l/jenkins-build-test",branch: 'master'
+
     stage('Build') {
-    container('buildsh') {
-//            withCredentials([file(credentialsId: "${GIT_KEY}", variable: 'FILE')]) {
-//                 sh "cp $FILE /mnt/"
-//            }
-        println("$GIT_KEY")
-        sh "ls /mnt"
-        sh "rm /mnt/test.txt"
+      container('buildah') {        
+           withCredentials([sshUserPrivateKey(credentialsId: "9bcc9b80-6899-4b4b-8aa5-eb0080545418", keyFileVariable: 'keyfile')]) {
+            // start ssh-agent
+            sh "mkdir ~/.ssh/"
+            sh 'ssh-agent /bin/bash'           
+            // add private key to ssh-agent, check if private key is successfully added and git clone using the private key
+            sh 'eval $(ssh-agent) && ssh-add ${keyfile} && ssh-add -l && ssh-keyscan github.com  >> ~/.ssh/known_hosts && git clone git@github.com:ngo-l/jenkins-build-test.git'
+            }
+          sh 'pwd && ls ./'
+          sh 'buildah bud -t betalabsk8sacr.azurecr.io/ngo/dev:test1'
+          sh 'buildah images '
       }
     }
 
-    stage('Run kubectl') {
-      container('kubectl') {
-        sh "kubectl version"
-        sh "ls /mnt"
-      }
-    }
-    stage('Run helm') {
-      container('helm') {
-        sh "helm version"
-        sh "ls /mnt"
-      }
-    }
   }
 }
