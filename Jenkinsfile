@@ -1,9 +1,3 @@
-properties([
-    pipelineTriggers([
-      pullRequestReview(reviewStates: ['approved'])
-    ])
-])
-
 //demo
 pipeline {
     agent {
