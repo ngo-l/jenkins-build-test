@@ -1,4 +1,4 @@
-//demo
+
 pipeline {
     agent {
         kubernetes {
