@@ -4,6 +4,7 @@ properties([
     ])
 ])
 
+//demo
 pipeline {
     agent {
         kubernetes {
