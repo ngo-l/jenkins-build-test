@@ -1,4 +1,8 @@
-properties([pipelineTriggers([githubPush()])])
+properties([
+    pipelineTriggers([
+      pullRequestReview(reviewStates: ['approved'])
+    ])
+])
 
 pipeline {
     agent {
@@ -43,7 +47,7 @@ spec:
                 sh 'eval $(ssh-agent) && ssh-add ${keyfile} && ssh-add -l && ssh-keyscan github.com  >> ~/.ssh/known_hosts && git clone git@github.com:ngo-l/jenkins-build-test.git'
                 }
             sh 'pwd && ls ./'
-            sh 'buildah bud -t betalabsk8sacr.azurecr.io/ngo/dev:test1'
+            //sh 'buildah bud -t betalabsk8sacr.azurecr.io/ngo/dev:test1'
             sh 'buildah images '
         }
       }
@@ -55,7 +59,7 @@ spec:
             withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
                   sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"                 
                   sh "buildah images"
-                  sh "buildah push betalabsk8sacr.azurecr.io/ngo/dev:test1"
+                  //sh "buildah push betalabsk8sacr.azurecr.io/ngo/dev:test1"
             }
         }
       }
