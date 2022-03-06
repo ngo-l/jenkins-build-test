@@ -1,5 +1,4 @@
-//demo merge push test 05
-
+//demo pr merge build test 06
 pipeline {
     agent {
         kubernetes {
