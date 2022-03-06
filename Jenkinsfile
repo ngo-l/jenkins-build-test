@@ -1,4 +1,5 @@
 //demo merge push test 04
+
 pipeline {
     agent {
         kubernetes {
@@ -29,6 +30,24 @@ spec:
             defaultContainer 'shell'
         }
     }
+  triggers {
+    GenericTrigger(
+    genericVariables: [
+                      [key: 'action', value: '$.action'],
+                      [key: 'merged', value: '$.pull_request.merged']
+              ],
+
+              causeString: 'Triggered on pr merge',
+
+              token: 'demo1234',
+
+              printContributedVariables: true,
+              printPostContent: true,
+              silentResponse: false,
+              regexpFilterText: '$action#$merged',
+              regexpFilterExpression: 'closed#true'
+    )
+  }  
    stages {              
     stage('Build image') {
       steps {
