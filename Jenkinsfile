@@ -30,19 +30,11 @@ spec:
         }
     }
 
-     environment {
-
-        //Deployment env
-
-        //project credentials or env
-
-    }
 
     stages{
                 stage('master env test') {
                   when {
-                        env.BRANCH_NAME = "master"
-                        environment(name: "ENV", value: "production")
+                        expression { env.BRANCH_NAME = "master" }
                   }
                   steps {
                       container('buildah') {
@@ -55,8 +47,7 @@ spec:
 
               stage('staging env test') {
                   when {
-                        env.BRANCH_NAME = "staging"
-                        environment(name: "ENV", value: "staging")
+                        expression { env.BRANCH_NAME = "staging" }
                   }
                   steps {
                       container('buildah') {
