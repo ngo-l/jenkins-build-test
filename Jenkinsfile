@@ -30,14 +30,28 @@ spec:
         }
     }
     stages{
-                stage('env test') {
+                stage('master env test') {
+                  when {
+                      branch 'master'
+                  }
                   steps {
                       container('buildah') {
-                        load "envvar"
+                        load "envvars"
                           echo "${env.DB_URL}"
                           echo "${env.DB_URL2}"
                           }
                       }
             }
+
+              stage('staging env test') {
+                  when {
+                      branch 'staging'
+                  }
+                  steps {
+                      container('buildah') {
+                          echo "staging demo "
+                          }
+                      }
+                }
     }  
 }
