@@ -45,7 +45,7 @@ spec:
 
               stage('staging env test') {
                   when {
-                    branch "master"
+                    branch "origin/master"
                         //expression { env.BRANCH_NAME = "master" }
                   }
                   steps {
