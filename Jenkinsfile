@@ -36,6 +36,9 @@ spec:
                   steps {
                       container('buildah') {
                             echo env.BRANCH_NAME 
+                            sh 'printenv'
+                            sh 'echo $GIT_BRANCH'
+                            echo "${env.GIT_BRANCH}"
                           }
                       }    
             }
