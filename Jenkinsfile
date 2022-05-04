@@ -33,7 +33,7 @@ spec:
                 stage('env test') {
                   steps {
                       container('buildah') {
-                        load "envvar.txt"
+                        load "envvar"
                           echo "${env.DB_URL}"
                           echo "${env.DB_URL2}"
                           }
