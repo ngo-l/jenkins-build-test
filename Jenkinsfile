@@ -29,52 +29,15 @@ spec:
             defaultContainer 'shell'
         }
     }
-  triggers {
-    GenericTrigger(
-    genericVariables: [
-                      [key: 'action', value: '$.action'],
-                      [key: 'merged', value: '$.pull_request.merged']
-              ],
 
-              causeString: 'Triggered on pr merge',
-
-              token: 'demo1234',
-
-              printContributedVariables: true,
-              printPostContent: true,
-              silentResponse: false,
-              regexpFilterText: '$action#$merged',
-              regexpFilterExpression: 'closed#true'
-    )
-  }  
    stages {              
-    stage('Build image') {
-      steps {
-        git url: "https://github.com/ngo-l/jenkins-build-test",branch: 'master'  
-        container('buildah') {        
-            withCredentials([sshUserPrivateKey(credentialsId: "9bcc9b80-6899-4b4b-8aa5-eb0080545418", keyFileVariable: 'keyfile')]) {
-                // start ssh-agent
-                sh "mkdir ~/.ssh/"
-                sh 'ssh-agent /bin/bash'           
-                // add private key to ssh-agent, check if private key is successfully added and git clone using the private key
-                sh 'eval $(ssh-agent) && ssh-add ${keyfile} && ssh-add -l && ssh-keyscan github.com  >> ~/.ssh/known_hosts && git clone git@github.com:ngo-l/jenkins-build-test.git'
-                }
-            sh 'pwd && ls ./'
-            //sh 'buildah bud -t betalabsk8sacr.azurecr.io/ngo/dev:test1'
-            sh 'buildah images '
-        }
-      }
-    }
 
-        stage('Push image') {
+
+        stage('env test') {
       steps {
-        container('buildah') {
-            withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
-                  sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"                 
-                  sh "buildah images"
-                  //sh "buildah push betalabsk8sacr.azurecr.io/ngo/dev:test1"
-            }
-        }
+             load "$JENKINS_HOME/.envvars/stacktest-staging.groovy"
+              echo "${env.DB_URL}"
+              echo "${env.DB_URL2}"
       }
     }
 
