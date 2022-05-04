@@ -41,8 +41,7 @@ spec:
     stages{
                 stage('master env test') {
                   when {
-                       load "envvars"
-                        GIT_BRANCH = "master"
+                        env.BRANCH_NAME = "master"
                         environment(name: "ENV", value: "production")
                   }
                   steps {
@@ -56,8 +55,7 @@ spec:
 
               stage('staging env test') {
                   when {
-                        load "envvars"
-                        GIT_BRANCH = "staging"
+                        env.BRANCH_NAME = "staging"
                         environment(name: "ENV", value: "staging")
                   }
                   steps {
