@@ -32,7 +32,10 @@ spec:
     stages{
                 stage('master env test') {
                   when {
-                      branch 'master'
+                    allOf {
+                        branch "master"
+                        environment(name: "ENV", value: "production")
+                    }
                   }
                   steps {
                       container('buildah') {
@@ -45,7 +48,10 @@ spec:
 
               stage('staging env test') {
                   when {
-                      branch 'staging'
+                    allOf {
+                        branch "staging"
+                        environment(name: "ENV", value: "staging")
+                    }
                   }
                   steps {
                       container('buildah') {
