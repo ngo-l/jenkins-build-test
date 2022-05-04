@@ -30,16 +30,13 @@ spec:
         }
     }
 
-   stages {              
-
-
-        stage('env test') {
-      steps {
-             load "$JENKINS_HOME/.envvars/stacktest-staging.groovy"
-              echo "${env.DB_URL}"
-              echo "${env.DB_URL2}"
-      }
-    }
-
-  }
+            stage('env test') {
+              steps {
+                  container('buildah') {
+                    load "$JENKINS_HOME/.envvars/stacktest-staging.groovy"
+                      echo "${env.DB_URL}"
+                      echo "${env.DB_URL2}"
+                      }
+                  }
+        }
 }
