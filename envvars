@@ -1,2 +1,3 @@
+GIT_BRANCH = "master"
 env.DB_URL="demo5"
 env.DB_URL2="demo6"

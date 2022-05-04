@@ -29,13 +29,21 @@ spec:
             defaultContainer 'shell'
         }
     }
+
+     environment {
+
+        //Deployment env
+
+        //project credentials or env
+
+    }
+
     stages{
                 stage('master env test') {
                   when {
-                    allOf {
-                        branch "master"
+                       load "envvars"
+                        GIT_BRANCH = "master"
                         environment(name: "ENV", value: "production")
-                    }
                   }
                   steps {
                       container('buildah') {
@@ -48,10 +56,9 @@ spec:
 
               stage('staging env test') {
                   when {
-                    allOf {
-                        branch "staging"
+                        load "envvars"
+                        GIT_BRANCH = "staging"
                         environment(name: "ENV", value: "staging")
-                    }
                   }
                   steps {
                       container('buildah') {
