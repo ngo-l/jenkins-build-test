@@ -45,7 +45,7 @@ spec:
 
               stage('staging env test') {
                   when {
-                    env.GIT_BRANCH 'origin/master'
+                    GIT_BRANCH 'origin/master'
                         //expression { env.BRANCH_NAME = "master" }
                   }
                   steps {
