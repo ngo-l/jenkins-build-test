@@ -33,25 +33,23 @@ spec:
 
     stages{
                 stage('master env test') {
+                  steps {
+                      container('buildah') {
+                            echo env.BRANCH_NAME 
+                          }
+                      }    
+            }
+
+              stage('staging env test') {
                   when {
-                        expression { env.BRANCH_NAME = "master" }
+                    branch "master"
+                        //expression { env.BRANCH_NAME = "master" }
                   }
                   steps {
                       container('buildah') {
                         load "envvars"
                           echo "${env.DB_URL}"
                           echo "${env.DB_URL2}"
-                          }
-                      }
-            }
-
-              stage('staging env test') {
-                  when {
-                        expression { env.BRANCH_NAME = "staging" }
-                  }
-                  steps {
-                      container('buildah') {
-                          echo "staging demo "
                           }
                       }
                 }
