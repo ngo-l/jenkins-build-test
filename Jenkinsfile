@@ -33,7 +33,7 @@ spec:
                 stage('env test') {
                   steps {
                       container('buildah') {
-                        load "$JENKINS_HOME/.envvars/stacktest-staging.groovy"
+                        load ".envvars/stacktest-staging.groovy"
                           echo "${env.DB_URL}"
                           echo "${env.DB_URL2}"
                           }
