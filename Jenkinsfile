@@ -44,11 +44,10 @@ spec:
             }
 
               stage('staging env test') {
-                  when {
-                    //GIT_BRANCH 'origin/master'
-                        //expression { env.GIT_BRANCH = "origin/master" }
-                        expression { env.GIT_BRANCH ==~ /(master)/ }
-                  }
+
+              when{
+                  environment name: 'BRANCH_NAME', value: 'master'
+              }
                   steps {
                       container('buildah') {
                         load "envvars"
