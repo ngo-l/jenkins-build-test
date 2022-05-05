@@ -58,5 +58,15 @@ spec:
                           }
                       }
                 }
+
+              stage('env test') {
+
+                  steps {
+                      container('buildah') {
+                          echo "${env.DB_URL}"
+
+                          }
+                      }
+                }                
     }  
 }
