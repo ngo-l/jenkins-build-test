@@ -46,7 +46,9 @@ spec:
               stage('staging env test') {
 
               when{
-                  environment name: 'BRANCH_NAME', value: 'master'
+                expression {
+                  return env.GIT_BRANCH == "origin/master"
+                }
               }
                   steps {
                       container('buildah') {
