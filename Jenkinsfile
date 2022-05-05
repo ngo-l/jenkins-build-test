@@ -30,7 +30,22 @@ spec:
         }
     }
 
-
+triggers {
+    GenericTrigger(
+    genericVariables: [
+                      [key: 'action', value: '$.action'],
+                      [key: 'merged', value: '$.pull_request.merged'],
+                      [key: 'ref', value: '$.pull_request.base.ref']
+              ],
+              causeString: 'Triggered on pr merge',
+              token: "${APPNAME}",
+              printContributedVariables: true,
+              printPostContent: true,
+              silentResponse: false,
+              regexpFilterText: '$action#$merged#$ref',
+              regexpFilterExpression: 'closed#true#master'
+    )
+  }
     stages{
                 stage('load env test') {
                   steps {
@@ -59,7 +74,7 @@ spec:
 
                   steps {
                       container('buildah') {
-                          echo "${APPIMG}"
+                          echo "${APPNAME}"
 
                           }
                       }
