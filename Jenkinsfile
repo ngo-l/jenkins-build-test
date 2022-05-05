@@ -32,13 +32,10 @@ spec:
 
 
     stages{
-                stage('master env test') {
+                stage('load env test') {
                   steps {
                       container('buildah') {
-                            echo env.BRANCH_NAME 
-                            sh 'printenv'
-                            sh 'echo $GIT_BRANCH'
-                            echo "${env.GIT_BRANCH}"
+                        load "envvars"
                           }
                       }    
             }
@@ -52,9 +49,8 @@ spec:
               }
                   steps {
                       container('buildah') {
-                        load "envvars"
-                          echo "${env.DB_URL}"
-                          echo "${env.DB_URL2}"
+                          echo "${GIT_REPO}"
+                          echo "${GIT_BRANCH}"
                           }
                       }
                 }
@@ -63,7 +59,7 @@ spec:
 
                   steps {
                       container('buildah') {
-                          echo "${env.DB_URL}"
+                          echo "${APPIMG}"
 
                           }
                       }
