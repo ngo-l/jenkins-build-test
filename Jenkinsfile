@@ -46,7 +46,8 @@ spec:
               stage('staging env test') {
                   when {
                     //GIT_BRANCH 'origin/master'
-                        expression { env.GIT_BRANCH = "origin/master" }
+                        //expression { env.GIT_BRANCH = "origin/master" }
+                        expression { BRANCH_NAME ==~ /(master)/ }
                   }
                   steps {
                       container('buildah') {
