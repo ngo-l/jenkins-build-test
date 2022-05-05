@@ -47,7 +47,7 @@ spec:
                   when {
                     //GIT_BRANCH 'origin/master'
                         //expression { env.GIT_BRANCH = "origin/master" }
-                        expression { BRANCH_NAME ==~ /(master)/ }
+                        expression { env.GIT_BRANCH ==~ /(master)/ }
                   }
                   steps {
                       container('buildah') {
