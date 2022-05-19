@@ -170,6 +170,7 @@ spec:
               steps {
                       container('kubectl') {
                         script{
+                            env.PORD = 1
                             def remote = [:]
                             remote.name = "kubectl-server"
                             remote.host = "104.208.105.208"
@@ -197,7 +198,6 @@ spec:
                             }
                         }
                       }
-                      script{  env.PORD = 1}
               }
          }
 
