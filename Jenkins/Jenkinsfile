@@ -184,15 +184,15 @@ spec:
                             remote.identityFile = identity
                             remote.allowAnyHosts = true
                                 stage("SSH deploy") {
-                                        sshPut remote: remote, from: env.yaml , into: '.'
-                                        sshPut remote: remote, from: env.secret , into: '.'
-                                        sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
-                                        sshCommand remote: remote, command: "kubectl create secret generic $env.secret --from-file=$env.secret -n $env.ns"
-                                        sshCommand remote: remote, command: "kubectl apply -f deploy.yaml -n $env.ns"
-                                        sshCommand remote: remote, command: "kubectl get svc -n $env.ns"
+//                                         sshPut remote: remote, from: env.yaml , into: '.'
+//                                         sshPut remote: remote, from: env.secret , into: '.'
+//                                         sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
+//                                         sshCommand remote: remote, command: "kubectl create secret generic $env.secret --from-file=$env.secret -n $env.ns"
+//                                         sshCommand remote: remote, command: "kubectl apply -f deploy.yaml -n $env.ns"
+//                                         sshCommand remote: remote, command: "kubectl get svc -n $env.ns"
                                         sshCommand remote: remote, command: "kubectl get ing -n $env.ns"
-                                        sshRemove remote: remote, path: "deploy.yaml"
-                                        sshRemove remote: remote, path: env.secret
+//                                         sshRemove remote: remote, path: "deploy.yaml"
+//                                         sshRemove remote: remote, path: env.secret
                                         }
                             }
                         }
@@ -206,7 +206,8 @@ spec:
                 script{
                   if( env.STAGING >= 1){                  
                     echo "staging: ${env.STAGING}"
-                    echo "prod: ${env.PROD}"
+                  } else if( env.PROD >= 1){                  
+                    echo "PROD: ${env.PROD}"
                   }
                 }        
 
