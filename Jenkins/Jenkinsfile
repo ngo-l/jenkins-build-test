@@ -210,7 +210,8 @@ spec:
                             echo "staging deployment check ${env.STAGING}"
                             POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
                             POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
-                            
+                            echo "New deploy POD IP:${POD_IP}"
+
                         } else if( env.PROD >= 1){                  
                             echo "production deployment check: ${env.PROD}"
                             container('kubectl') {
@@ -227,10 +228,16 @@ spec:
                                   remote.identityFile = identity
                                   remote.allowAnyHosts = true
                                   def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
-                                  
+
                                   env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
                                   def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
-                                  echo "New Rolling POD IP:${POD_IP}"
+                                  echo "New deploy POD IP:${POD_IP}"
+
+                                  env.site = "http://${POD_IP}:8080/${CHK_PATH}"
+                                  println('URL: '+ "${env.site}")
+                                  def response = httpRequest "${env.site}"
+                                  println('Status: '+response.status)
+                                  env.httpcode = response.status                                  
 
                                   }
                               }
