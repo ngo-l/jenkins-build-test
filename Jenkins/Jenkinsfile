@@ -221,7 +221,7 @@ spec:
                                   remote.host = "104.208.105.208"
                                   remote.allowAnyHosts = true
                                   env.POD_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'"
-                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                  
                                   
                                   withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
                                   remote.user = userName
@@ -230,6 +230,7 @@ spec:
                                   def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
 
                                   env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
+                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                   def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                   echo "New deploy POD IP:${POD_IP}"
 
