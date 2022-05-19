@@ -236,7 +236,9 @@ spec:
                                   env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                   def STIE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                   echo "site status code: ${STIE_CHK}"   
-
+                                  println('URL: '+ "http://${POD_IP}:${APPPORT}/${CHK_PATH}")
+                                  println('Status: '+response.STIE_CHK)
+                                  env.httpcode = response.status
                                   }
                               }
                             }                          
