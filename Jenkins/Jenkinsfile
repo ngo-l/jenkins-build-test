@@ -221,7 +221,7 @@ spec:
                                   remote.host = "104.208.105.208"
                                   remote.allowAnyHosts = true
                                   env.POD_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'"
-                                  
+                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                   
                                   withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
                                   remote.user = userName
@@ -233,9 +233,9 @@ spec:
                                   def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                   echo "New deploy POD IP:${POD_IP}"
 
-                                  env.site = "http://${POD_IP}:8080/${CHK_PATH}"
-                                  println('URL: '+ "${env.site}")
-                                  def response = httpRequest "${env.site}"
+                                  def STIE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
+                                  println('URL: '+ "http://${POD_IP}:${APPPORT}/${CHK_PATH}")
+                                  def response = $STIE_CHK "${http://${POD_IP}:${APPPORT}/${CHK_PATH}}"
                                   println('Status: '+response.status)
                                   env.httpcode = response.status                                  
 
