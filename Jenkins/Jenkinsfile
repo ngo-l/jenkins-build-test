@@ -221,15 +221,16 @@ spec:
                             remote.name = "kubectl-server"
                             remote.host = "104.208.105.208"
                             remote.allowAnyHosts = true
-                            POD_IP_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,Running) {print \$1}'"
+                            env.POD_IP_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,Running) {print \$1}'"
 
+                            
                             withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
                             remote.user = userName
                             remote.identityFile = identity
                             remote.allowAnyHosts = true
                                 stage("SSH deploy") {
-                                        POD_IP = sh(returnStdout: true, script: sshCommand remote: remote, command: POD_IP_SH).trim()                                 
-                                        sshCommand remote: remote, command: "kubectl get ing -n $env.ns"
+                                        def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                
+                                        echo "POD_IP:${POD_IP}"
                                         }
                             }
                         }
