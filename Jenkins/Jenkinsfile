@@ -206,7 +206,7 @@ spec:
                 script{
                   if( env.STAGING >= 1){                  
                     echo "staging: ${env.STAGING}"
-                  } else if( env.PROD >= 1){                  
+                  } else {                  
                     echo "PROD: ${env.PROD}"
                   }
                 }        
