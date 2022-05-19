@@ -239,7 +239,7 @@ spec:
                                   println('URL: '+ "http://${POD_IP}:${APPPORT}/${CHK_PATH}")
 
                                   env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                                  def response = sshCommand remote: remote, command: httpRequest ${env.site}, sudo: true
+                                  def response = sshCommand remote: remote, command: httpRequest env.site, sudo: true
                                   println('Status: '+response.status)
                                   env.httpcode = response.status
                                   }
