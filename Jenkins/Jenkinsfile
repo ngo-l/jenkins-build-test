@@ -184,7 +184,6 @@ spec:
                             remote.user = userName
                             remote.identityFile = identity
                             remote.allowAnyHosts = true
-                                stage("SSH deploy") {
 //                                         sshPut remote: remote, from: env.yaml , into: '.'
 //                                         sshPut remote: remote, from: env.secret , into: '.'
 //                                         sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
@@ -194,7 +193,6 @@ spec:
                                         sshCommand remote: remote, command: "kubectl get ing -n $env.ns"
 //                                         sshRemove remote: remote, path: "deploy.yaml"
 //                                         sshRemove remote: remote, path: env.secret
-                                        }
                             }
                         }
                       }
@@ -209,31 +207,32 @@ spec:
                             echo "Deployment fails, please check."
                         }                  
                           else if( env.STAGING >= 1){                  
-                          echo "staging deployment check ${env.STAGING}"
-                          POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
-                          POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
-                           
-                        } else if( env.PROD >= 1){                  
-                          echo "production deployment check: ${env.PROD}"
-                      container('kubectl') {
-                        script{
-                            def remote = [:]
-                            remote.name = "kubectl-server"
-                            remote.host = "104.208.105.208"
-                            remote.allowAnyHosts = true
-                            env.POD_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'"
-                            env.POD_IP_SH = 
+                            echo "staging deployment check ${env.STAGING}"
+                            POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
+                            POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                             
-                            withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
-                            remote.user = userName
-                            remote.identityFile = identity
-                            remote.allowAnyHosts = true
-                            def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true                                
-                            echo "POD:${POD}"
+                        } else if( env.PROD >= 1){                  
+                            echo "production deployment check: ${env.PROD}"
+                            container('kubectl') {
+                              script{
+                                  def remote = [:]
+                                  remote.name = "kubectl-server"
+                                  remote.host = "104.208.105.208"
+                                  remote.allowAnyHosts = true
+                                  env.POD_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'"
+                                  env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
+                                  
+                                  withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
+                                  remote.user = userName
+                                  remote.identityFile = identity
+                                  remote.allowAnyHosts = true
+                                  def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
+                                  def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
+                                  echo "New Rolling POD IP:${POD_IP}"
 
-                            }
-                        }
-                      }                          
+                                  }
+                              }
+                            }                          
                         }
                 }        
 
