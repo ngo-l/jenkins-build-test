@@ -210,7 +210,7 @@ spec:
                         }                  
                           else if( env.STAGING >= 1){                  
                           echo "staging deployment check ${env.STAGING}"
-                          POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,Running) {print \$1}'").trim()
+                          POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
                           POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                            
                         } else if( env.PROD >= 1){                  
@@ -221,17 +221,16 @@ spec:
                             remote.name = "kubectl-server"
                             remote.host = "104.208.105.208"
                             remote.allowAnyHosts = true
-                            env.POD_IP_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,Running) {print \$1}'"
-
+                            env.POD_SH = "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,Running) {print \$1}'"
+                            env.POD_IP_SH = 
                             
                             withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
                             remote.user = userName
                             remote.identityFile = identity
                             remote.allowAnyHosts = true
-                                stage("SSH deploy") {
-                                        def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                
-                                        echo "POD_IP:${POD_IP}"
-                                        }
+                            def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true                                
+                            echo "POD:${POD}"
+
                             }
                         }
                       }                          
