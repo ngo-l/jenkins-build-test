@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: _appname
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      name: _appname
+  template:
+    metadata:
+      labels:
+        name: _appname
+    spec:
+      containers:
+        - name: _appname
+          image: _appimg
+          imagePullPolicy: Always
+          env:
+          - name: DEPLOYMENT_ENVIRONMENT
+            value: "_env"
+          ports:
+            - name: http
+              containerPort: _appport
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 30
+          resources:
+            limits:
+              cpu: 512m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+#      tolerations:
+#        - effect: NoSchedule
+#          operator: Exists
+#      affinity:
+#        nodeAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#            nodeSelectorTerms:
+#              - matchExpressions:
+#                  - key: agentpool
+#                    operator: In
+#                    values:
+#                      - spotnode
+          volumeMounts:
+            - mountPath: /code/conf/secrets
+              name: secret
+              readOnly: true
+      volumes:
+        - name: secret
+          secret:
+            secretName: secrets.env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: _appname
+spec:
+  selector:
+    name: _appname
+  type: NodePort
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+      name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: _appname
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      if ($scheme != "https") {
+        rewrite ^ https://$host$uri permanent;
+      }
+spec:
+  tls:
+    - hosts:
+        - _host
+      secretName: betalabs-ssl
+  rules:
+    - host: _host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: _appname
+                port:
+                  name: http
+---

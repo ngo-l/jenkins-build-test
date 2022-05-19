@@ -1,0 +1,248 @@
+def GitBuildBadge = addEmbeddableBadgeConfiguration(id: "jenkinsbuild", subject: "Jenkins Build")
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: buildah
+    image: betalabsk8sacr.azurecr.io/buildah:v1
+    securityContext:
+      privileged: true
+    command:
+    - cat
+    tty: true
+  - name: kubectl
+    image: betalabsk8sacr.azurecr.io/kubectl:v1
+    command:
+    - cat
+    tty: true   
+  - name: sops
+    image: betalabsk8sacr.azurecr.io/sops:v2
+    command:
+    - cat
+    tty: true
+  tolerations:
+  - key: "kubernetes.azure.com/scalesetpriority"
+    operator: "Equal"
+    value: "spot"
+    effect: "NoSchedule"              
+'''
+            defaultContainer 'shell'
+        }
+    }
+
+    triggers {
+    GenericTrigger(
+    genericVariables: [
+                      [key: 'action', value: '$.action'],
+                      [key: 'merged', value: '$.pull_request.merged'],
+                      [key: 'ref', value: '$.pull_request.base.ref']
+              ],
+              causeString: 'Triggered on pr merge',
+              token: "_job_name",
+              printContributedVariables: true,
+              printPostContent: true,
+              silentResponse: false,
+              regexpFilterText: '$action#$merged#$ref',
+              regexpFilterExpression: 'closed#true#staging'
+    )
+  }
+
+   stages {              
+
+     stage('load env') {
+                  steps {
+                      container('buildah') {
+                        load "Jenkins/Jenkinsenv"
+                        //<--slack user-->
+				                wrap([$class: 'BuildUser']) { script { env.USER_ID = "${BUILD_USER_ID}" } }
+                        echo "repo:${GIT_REPO}"
+                        echo "branch:${GIT_BRANCH}"
+                        echo "env repo: ${GIT_ENV_REPO}"
+                        echo "env file: ${ENCRYPT_ENV}"
+                      }
+                  }        
+            }            
+
+        stage('config env') {
+            steps {
+              container('sops') {
+            withCredentials([sshUserPrivateKey(credentialsId: "${CREDENTIALS}", keyFileVariable: 'keyfile')]) {
+                sh "mkdir ~/.ssh/"
+                sh 'ssh-agent /bin/bash' 
+                sh 'ssh-keyscan github.com  >> ~/.ssh/known_hosts' 
+                sh "eval \"\$(ssh-agent)\" && ssh-add ${keyfile} && ssh-add -l && git clone ${GIT_ENV_REPO}"      
+                }   
+                
+           withCredentials([file(credentialsId: 'jenkins-sops-pvt-key', variable: 'FILE')]) {
+              sh 'gpg --import $FILE'    
+              sh "gpg --list-keys"
+              sh "sops -d ${ENCRYPT_ENV} > ${DECRYPT_ENV}"                
+            }                               
+
+                 sh "sops -v" 
+                 sh "ls ./"
+                 sh "cat ${ENCRYPT_ENV}"                            
+                }
+            }
+    }
+
+    stage('build image') {
+      steps {
+        container('buildah') {
+
+            sh 'pwd && ls ./'
+            //get git commit hash version
+            script{
+                def GIT_TAG = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                env.git_tag = "${GIT_TAG}"
+                 }
+           // sh  "buildah bud -t ${APPIMG}:${GIT_TAG}"
+        }
+      }
+    }
+
+ //
+//         stage('Push image') {
+//         steps {
+//             container('buildah') {
+//                 withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
+//                     sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"
+//                     sh "buildah images"
+//                     sh "buildah push ${APPIMG}:${GIT_TAG}"
+//                 }
+//             }
+//         }
+//     }
+
+        stage('config deploy') {
+            steps {
+                container('kubectl') {
+                script{
+                  //It will be added to staging env unless it is under in master branch.
+                  if (env.GIT_BRANCH == "master") {
+                    sh "sed -i -e \'s,\'_env\',\'production\',g\' ${TARGET_DIR}/deploy.yaml"
+                    }else{
+                    sh "sed -i -e \'s,\'_env\',\'staging\',g\' ${TARGET_DIR}/deploy.yaml"  
+                    }
+                }
+                    sh "sed -i -e \'s,\'_appname\',\'${APPNAME}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appport\',\'${APPPORT}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appimg\',\'${APPIMG}:${GIT_TAG}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_host\',\'${HOST}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    
+                    sh "cat ${TARGET_DIR}/deploy.yaml"
+                    }
+                }    
+            }
+
+        stage('aks staging deploy') {
+              when{
+                expression {
+                  return env.GIT_BRANCH == "origin/staging" || env.GIT_BRANCH.contains("origin/test")
+                }
+              }               
+            steps {
+                    container('kubectl') {
+                        withCredentials([file(credentialsId: 'stg-aks-hk-config', variable: 'FILE')]) {
+                            sh "cp ${FILE} /root/.kube/"
+                        }
+//                         sh "kubectl delete secret ${DECRYPT_ENV} -n ${NS} || true"
+//                         sh "kubectl create secret generic ${DECRYPT_ENV} --from-file=${DECRYPT_ENV} -n ${NS} || true"
+//                         sh "kubectl apply -f ${TARGET_DIR}/deploy.yaml -n ${NS}"
+                        sh "kubectl get ing -n ${NS}"
+                      }
+                        script{env.STAGING = 1} 
+                  }
+        }
+
+
+
+         stage('aks production deploy') {
+              when{
+                expression {
+                  return env.GIT_BRANCH == "origin/master"
+                } 
+              }            
+              steps {
+                      container('kubectl') {
+                        script{
+                            def remote = [:]
+                            remote.name = "kubectl-server"
+                            remote.host = "104.208.105.208"
+                            remote.allowAnyHosts = true
+                            env.secret = "${DECRYPT_ENV}"
+                            env.yaml = "${TARGET_DIR}/deploy.yaml"
+                            env.ns = "${NS}"
+                            env.appname = "${APPNAME}"
+
+                            withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
+                            remote.user = userName
+                            remote.identityFile = identity
+                            remote.allowAnyHosts = true
+                                stage("SSH deploy") {
+                                        sshPut remote: remote, from: env.yaml , into: '.'
+                                        sshPut remote: remote, from: env.secret , into: '.'
+                                        sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
+                                        sshCommand remote: remote, command: "kubectl create secret generic $env.secret --from-file=$env.secret -n $env.ns"
+                                        sshCommand remote: remote, command: "kubectl apply -f deploy.yaml -n $env.ns"
+                                        sshCommand remote: remote, command: "kubectl get svc -n $env.ns"
+                                        sshCommand remote: remote, command: "kubectl get ing -n $env.ns"
+                                        sshRemove remote: remote, path: "deploy.yaml"
+                                        sshRemove remote: remote, path: env.secret
+                                        }
+                            }
+                        }
+                      }
+                      script{  env.PORD = 1}
+              }
+         }
+
+        stage('Deployment check') {
+            steps {
+                script{
+                  if( env.STAGING >= 1){                  
+                    echo "staging: ${env.STAGING}"
+                    echo "prod: ${env.PROD}"
+                  }
+                }        
+
+              }    
+            }
+
+
+
+//         stage('Private endpoint check') {
+//             steps {
+//                 script {
+//                             env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+//                           	println('URL: '+ "${env.site}")
+//                             def response = httpRequest "${env.site}"
+//                             println('Status: '+response.status)
+//                             env.httpcode = response.status
+//                 }
+//             }
+//           }
+  }
+//     post {
+//
+// 			success {
+// 				slackSend channel: '#jenkins',
+// 				color: 'good',
+// 				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+//         script{ GitBuildBadge.setStatus('passing')}
+// 				}
+// 			failure {
+// 				slackSend channel: '#jenkins',
+// 				color: 'warning',
+// 				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
+//           script{
+//             GitBuildBadge.setStatus('failing')
+//             GitBuildBadge.setColor('pink')
+//           }
+// 				}
+//     }
+}
