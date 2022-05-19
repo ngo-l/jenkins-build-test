@@ -170,7 +170,7 @@ spec:
               steps {
                       container('kubectl') {
                         script{
-                            env.PORD = 1
+                            env.PROD  = 1
                             def remote = [:]
                             remote.name = "kubectl-server"
                             remote.host = "104.208.105.208"
@@ -206,7 +206,7 @@ spec:
                 script{
                   if( env.STAGING >= 1){                  
                     echo "staging: ${env.STAGING}"
-                  } else {                  
+                  } else if( env.PROD >= 1){                  
                     echo "PROD: ${env.PROD}"
                   }
                 }        
