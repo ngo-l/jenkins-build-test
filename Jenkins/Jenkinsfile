@@ -235,14 +235,11 @@ spec:
 
                                   env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                   def STIE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                  echo "site status code: ${STIE_CHK}"   
-                                  println('URL: '+ "http://${POD_IP}:${APPPORT}/${CHK_PATH}")
-
-                                  env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                                  REAUEST_SH = httpRequest "${env.site}"
-                                  def response = sshCommand remote: remote, command: REAUEST_SH, sudo: true
-                                  println('Status: '+response.status)
-                                  env.httpcode = response.status
+                                      if ($STIE_CHK => 200 || <= 204){
+                                        echo "https status code : ${SITE_CHK} "                                       
+                                      } else { 
+                                        echo "https status ${SITE_CHK} unhealth" 
+                                        }
                                   }
                               }
                             }                          
