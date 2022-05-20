@@ -211,6 +211,12 @@ spec:
                             POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
                             POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                             echo "New deploy POD IP:${POD_IP}"
+                            env.site = "http://${POD_IP}:8080/${CHK_PATH}"
+                            echo "Private endpoint: ${env.site}"
+                          	println('URL: '+ "${env.site}")
+                            def response = httpRequest "${env.site}"
+                            println('Status: '+response.status)
+                            env.httpcode = response.status                            
 
                         } else if( env.PROD >= 1){                  
                             echo "production deployment check: ${env.PROD}"
@@ -232,9 +238,10 @@ spec:
                                   env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
                                   def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                   echo "New deploy POD IP:${POD_IP}"
-                                  echo "Private endpoint: http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                  env.site = "http://${POD_IP}:8080/${CHK_PATH}"
+                                  echo "Private endpoint: ${env.site}"
 
-                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
                                   def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                   
 
