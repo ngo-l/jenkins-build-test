@@ -234,8 +234,8 @@ spec:
                                   echo "New deploy POD IP:${POD_IP}"
 
                                   env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                                  def STIE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                      if ("${STIE_CHK}" <= 204){
+                                  def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
+                                      if ("${SITE_CHK}" <= 204){
                                         echo "https status code : ${SITE_CHK} "                                       
                                       } else { 
                                         echo "https status ${SITE_CHK} unhealth" 
