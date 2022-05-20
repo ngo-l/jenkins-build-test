@@ -232,15 +232,16 @@ spec:
                                   env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
                                   def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                   echo "New deploy POD IP:${POD_IP}"
+                                  echo "Private endpoint: http://${POD_IP}:${APPPORT}/${CHK_PATH}"
 
                                   env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                   def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                   
 
-                                      if ("${SITE_CHK}" <= 200){
-                                        echo "https status code : ${SITE_CHK} "                                       
+                                      if ("${SITE_CHK}" >= 200 || "${SITE_CHK}" <= 204){
+                                        echo "Private endpoint http status code: ${SITE_CHK} | Pass "                                       
                                       } else { 
-                                        echo "https status ${SITE_CHK} unhealth" 
+                                        echo "Private endpoint http status code: ${SITE_CHK} | Fail "
                                         }
                                   }
                               }
