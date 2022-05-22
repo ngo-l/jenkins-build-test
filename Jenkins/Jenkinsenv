@@ -4,17 +4,18 @@ GIT_REPO = "git@github.com:LCJG-BetaLabs/lcjg-reminder-service.git"
 CREDENTIALS = "9bcc9b80-6899-4b4b-8aa5-eb0080545418"
 
 //aks env
-NS = "lcjg"
-APPIMG  = "betalabsk8sacr.azurecr.io/lcjg/lcjg-reminder-service"
-APPNAME = "lcjg-reminder-service"
-APPPORT = '8080'
+NS = "cdxp"
+APPIMG  = "betalabsk8sacr.azurecr.io/cdxp/reminderservice"
+APPNAME = "cdxp-campaign-service"
+APPPORT = '8000'
 HOST    = "customer-reminder-service.betalabs.ai"
 TARGET_DIR = "Jenkins"
 
 //secrets env
 GIT_ENV_REPO = "git@github.com:LCJG-BetaLabs/devops-deployment-env.git"
-ENCRYPT_ENV = "devops-deployment-env/lcjg-reminder-service/production/secrets.enc.env"
-DECRYPT_ENV = "secrets.env"
+STG_ENCRYPT_SEC = "devops-deployment-env/lcjg-reminder-service/staging/secrets.enc.env"
+PRD_ENCRYPT_SEC = "devops-deployment-env/lcjg-reminder-service/production/secrets.enc.env"
+DECRYPT_SEC = "secrets.env"
 
 //health check
 CHK_PATH = "healthz"

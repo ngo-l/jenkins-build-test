@@ -67,6 +67,28 @@ spec:
                   }        
             }            
 
+        stage('config deploy') {
+            steps {
+                container('kubectl') {
+                script{
+                  //It will be added to staging env unless it is under in master branch.
+                  if (env.GIT_BRANCH == "origin/master") {
+                    sh "sed -i -e \'s,\'_env\',\'production\',g\' ${TARGET_DIR}/deploy.yaml"
+                    env.ENCRYPT_SEC = PRD_ENCRYPT_SEC
+                    }else{
+                    sh "sed -i -e \'s,\'_env\',\'staging\',g\' ${TARGET_DIR}/deploy.yaml"  
+                    env.ENCRYPT_SEC = STG_ENCRYPT_SEC
+                    }
+                }
+                    sh "sed -i -e \'s,\'_appname\',\'${APPNAME}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appport\',\'${APPPORT}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appimg\',\'${APPIMG}:${GIT_TAG}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_host\',\'${HOST}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    
+                    sh "cat ${TARGET_DIR}/deploy.yaml"
+                    }
+                }    
+            }
         stage('config env') {
             steps {
               container('sops') {
@@ -74,18 +96,19 @@ spec:
                 sh "mkdir ~/.ssh/"
                 sh 'ssh-agent /bin/bash' 
                 sh 'ssh-keyscan github.com  >> ~/.ssh/known_hosts' 
+                sh "echo ${env.ENCRYPT_SEC}"
                 sh "eval \"\$(ssh-agent)\" && ssh-add ${keyfile} && ssh-add -l && git clone ${GIT_ENV_REPO}"      
                 }   
                 
            withCredentials([file(credentialsId: 'jenkins-sops-pvt-key', variable: 'FILE')]) {
               sh 'gpg --import $FILE'    
               sh "gpg --list-keys"
-              sh "sops -d ${ENCRYPT_ENV} > ${DECRYPT_ENV}"                
+              sh "sops -d ${env.ENCRYPT_SEC} > ${DECRYPT_SEC}"                
             }                               
 
                  sh "sops -v" 
                  sh "ls ./"
-                 sh "cat ${ENCRYPT_ENV}"                            
+                 sh "cat ${DECRYPT_SEC}"                            
                 }
             }
     }
@@ -118,26 +141,6 @@ spec:
 //         }
 //     }
 
-        stage('config deploy') {
-            steps {
-                container('kubectl') {
-                script{
-                  //It will be added to staging env unless it is under in master branch.
-                  if (env.GIT_BRANCH == "origin/master") {
-                    sh "sed -i -e \'s,\'_env\',\'production\',g\' ${TARGET_DIR}/deploy.yaml"
-                    }else{
-                    sh "sed -i -e \'s,\'_env\',\'staging\',g\' ${TARGET_DIR}/deploy.yaml"  
-                    }
-                }
-                    sh "sed -i -e \'s,\'_appname\',\'${APPNAME}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_appport\',\'${APPPORT}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_appimg\',\'${APPIMG}:${GIT_TAG}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_host\',\'${HOST}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    
-                    sh "cat ${TARGET_DIR}/deploy.yaml"
-                    }
-                }    
-            }
 
         stage('aks staging deploy') {
               when{
