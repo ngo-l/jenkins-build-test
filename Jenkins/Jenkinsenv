@@ -4,10 +4,10 @@ GIT_REPO = "git@github.com:LCJG-BetaLabs/lcjg-reminder-service.git"
 CREDENTIALS = "9bcc9b80-6899-4b4b-8aa5-eb0080545418"
 
 //aks env
-NS = "cdxp"
+NS = "lcjg"
 APPIMG  = "betalabsk8sacr.azurecr.io/lcjg/lcjg-reminder-service"
 APPNAME = "lcjg-reminder-service"
-APPPORT = '8000'
+APPPORT = '8080'
 HOST    = "customer-reminder-service.betalabs.ai"
 TARGET_DIR = "Jenkins"
 
