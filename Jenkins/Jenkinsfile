@@ -56,17 +56,17 @@ spec:
      stage('load env') {
                   steps {
                       container('buildah') {
-                        script{
-                          //It will be added to staging env unless it is under in master branch.
-                          if (env.GIT_BRANCH == "origin/master") {
-                            env.DEPLOY = "production"
-                            env.ENCRYPT_SEC = PRD_ENCRYPT_SEC
-                            }else{
-                            env.DEPLOY = "staging"
-                            env.ENCRYPT_SEC = STG_ENCRYPT_SEC
-                            }
-                        }                        
-                        load "Jenkins/Jenkinsenv"
+                      load "Jenkins/Jenkinsenv"
+                          script{
+                            //It will be added to staging env unless it is under in master branch.
+                            if (env.GIT_BRANCH == "origin/master") {
+                              env.DEPLOY = "production"
+                              env.ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
+                              }else{
+                              env.DEPLOY = "staging"
+                              env.ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
+                              }
+                          }                        
                         //<--slack user-->
 				                wrap([$class: 'BuildUser']) { script { env.USER_ID = "${BUILD_USER_ID}" } }
                         echo "repo:${GIT_REPO}"
