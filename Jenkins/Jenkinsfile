@@ -156,8 +156,8 @@ spec:
                         withCredentials([file(credentialsId: 'stg-aks-hk-config', variable: 'FILE')]) {
                             sh "cp ${FILE} /root/.kube/"
                         }
-//                         sh "kubectl delete secret ${DECRYPT_ENV} -n ${NS} || true"
-//                         sh "kubectl create secret generic ${DECRYPT_ENV} --from-file=${DECRYPT_ENV} -n ${NS} || true"
+//                         sh "kubectl delete secret ${DECRYPT_SEC} -n ${NS} || true"
+//                         sh "kubectl create secret generic ${DECRYPT_SEC} --from-file=${DECRYPT_SEC} -n ${NS} || true"
 //                         sh "kubectl apply -f ${TARGET_DIR}/deploy.yaml -n ${NS}"
                         sh "kubectl get ing -n ${NS}"
                       }
@@ -181,7 +181,7 @@ spec:
                             remote.name = "kubectl-server"
                             remote.host = "104.208.105.208"
                             remote.allowAnyHosts = true
-                            env.secret = "${DECRYPT_ENV}"
+                            env.secret = "${DECRYPT_SEC}"
                             env.yaml = "${TARGET_DIR}/deploy.yaml"
                             env.ns = "${NS}"
                             env.appname = "${APPNAME}"
