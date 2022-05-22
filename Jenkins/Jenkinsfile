@@ -214,7 +214,7 @@ spec:
                         }                  
                           else if( env.STAGING >= 1){  
                           container('kubectl') {    
-                            sh "sleep 150" //rolling deploy buffer             
+                            sh "sleep 60" //rolling deploy buffer             
                             POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'").trim()
                             POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                             echo "New deploy POD IP:${POD_IP}"
@@ -227,7 +227,7 @@ spec:
                           }
                         } else if( env.PROD >= 1){                  
                             container('kubectl') {
-                              sh "sleep 150" //rolling deploy buffer 
+                              sh "sleep 60" //rolling deploy buffer 
                               script{
                                   def remote = [:]
                                   remote.name = "kubectl-server"
