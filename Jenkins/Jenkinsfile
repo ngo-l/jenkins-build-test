@@ -96,7 +96,7 @@ spec:
 
                  sh "sops -v" 
                  sh "ls ./"
-                 sh "cat ${DECRYPT_SEC}"                            
+                 sh "cat ${ENCRYPT_SEC}"                            
                 }
             }
     }
