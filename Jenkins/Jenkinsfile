@@ -58,13 +58,13 @@ spec:
                       container('buildah') {
                       load "Jenkins/Jenkinsenv"
                           script{
-                            //It will be added to staging env unless it is under in master branch.
+                            //config branch deploy
                             if (env.GIT_BRANCH == "origin/master") {
-                              env.DEPLOY = "production"
-                              env.ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
+                              DEPLOY = "production"
+                              ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
                               }else{
-                              env.DEPLOY = "staging"
-                              env.ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
+                              DEPLOY = "staging"
+                              ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
                               }
                           }                        
                         //<--slack user-->
@@ -72,24 +72,12 @@ spec:
                         echo "repo:${GIT_REPO}"
                         echo "branch:${GIT_BRANCH}"
                         echo "env repo: ${GIT_ENV_REPO}"
-                        echo "env file: ${env.ENCRYPT_SEC}"
+                        echo "env file: ${ENCRYPT_SEC}"
                       }
                   }        
             }            
 
-        stage('config deploy') {
-            steps {
-                container('kubectl') {                 
-                    sh "sed -i -e \'s,\'_env\',\'${env.DEPLOY}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_appname\',\'${APPNAME}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_appport\',\'${APPPORT}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_appimg\',\'${APPIMG}:${GIT_TAG}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    sh "sed -i -e \'s,\'_host\',\'${HOST}\',g\' ${TARGET_DIR}/deploy.yaml"
-                    
-                    sh "cat ${TARGET_DIR}/deploy.yaml"
-                    }
-                }    
-            }
+
         stage('config env') {
             steps {
               container('sops') {
@@ -97,14 +85,13 @@ spec:
                 sh "mkdir ~/.ssh/"
                 sh 'ssh-agent /bin/bash' 
                 sh 'ssh-keyscan github.com  >> ~/.ssh/known_hosts' 
-                sh "echo ${env.ENCRYPT_SEC}"
                 sh "eval \"\$(ssh-agent)\" && ssh-add ${keyfile} && ssh-add -l && git clone ${GIT_ENV_REPO}"      
                 }   
                 
            withCredentials([file(credentialsId: 'jenkins-sops-pvt-key', variable: 'FILE')]) {
               sh 'gpg --import $FILE'    
               sh "gpg --list-keys"
-              sh "sops -d ${env.ENCRYPT_SEC} > ${DECRYPT_SEC}"                
+              sh "sops -d ${ENCRYPT_SEC} > ${DECRYPT_SEC}"                
             }                               
 
                  sh "sops -v" 
@@ -113,6 +100,8 @@ spec:
                 }
             }
     }
+
+
 
     stage('build image') {
       steps {
@@ -142,7 +131,20 @@ spec:
 //         }
 //     }
 
-
+        stage('config deploy') {
+            steps {
+                container('kubectl') {                 
+                    sh "sed -i -e \'s,\'_env\',\'${DEPLOY}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appname\',\'${APPNAME}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appport\',\'${APPPORT}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_appimg\',\'${APPIMG}:${GIT_TAG}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    sh "sed -i -e \'s,\'_host\',\'${HOST}\',g\' ${TARGET_DIR}/deploy.yaml"
+                    
+                    sh "cat ${TARGET_DIR}/deploy.yaml"
+                    }
+                }    
+            }
+            
         stage('aks staging deploy') {
               when{
                 expression {
