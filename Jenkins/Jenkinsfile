@@ -213,7 +213,6 @@ spec:
                             echo "Deployment fails, please check."
                         }                  
                           else if( env.STAGING >= 1){                  
-                            echo "staging deployment check ${env.STAGING}"
                             POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} | grep ${APPNAME} | awk 'match(\$5,/^[1-5]d|[1-9]+h|[1-9]+m|[1-9]+s/) {print \$1}'").trim()
                             POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                             echo "New deploy POD IP:${POD_IP}"
@@ -225,7 +224,6 @@ spec:
                             env.httpcode = response.status                            
 
                         } else if( env.PROD >= 1){                  
-                            echo "production deployment check: ${env.PROD}"
                             container('kubectl') {
                               script{
                                   def remote = [:]
