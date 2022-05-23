@@ -281,22 +281,22 @@ spec:
             }
           }
   }
-//     post {
-//
-// 			success {
-// 				slackSend channel: '#jenkins',
-// 				color: 'good',
-// 				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-//         script{ GitBuildBadge.setStatus('passing')}
-// 				}
-// 			failure {
-// 				slackSend channel: '#jenkins',
-// 				color: 'warning',
-// 				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
-//           script{
-//             GitBuildBadge.setStatus('failing')
-//             GitBuildBadge.setColor('pink')
-//           }
-// 				}
-//     }
+    post {
+
+			success {
+				slackSend channel: '#jenkins',
+				color: 'good',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+        script{ GitBuildBadge.setStatus('passing')}
+				}
+			failure {
+				slackSend channel: '#jenkins',
+				color: 'warning',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
+          script{
+            GitBuildBadge.setStatus('failing')
+            GitBuildBadge.setColor('pink')
+          }
+				}
+    }
 }
