@@ -59,22 +59,16 @@ spec:
                       load "Jenkins/Jenkinsenv"
                           script{
                             //config branch deploy
-                            if (env.GIT_BRANCH == "origin/master") {
-                                DEPLOY = "production"
-                                ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
-                                HOST = "${PRDHOST}"                            
-                              }else{
-                                DEPLOY = "staging"
-                                ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
-                                HOST = "${STGHOST}" 
-                              }
+                              DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
+                              HOST = env.GIT_BRANCH == "origin/master" ? "${PRDHOST}" : "${STGHOST}"
+                              env.ENCRYPT_SEC = "devops-deployment-env/${APPNAME}/${DEPLOY}/secrets.enc.env"                              
                           }                        
                         //<--slack user-->
 				                wrap([$class: 'BuildUser']) { script { env.USER_ID = "${BUILD_USER_ID}" } }
                         echo "repo:${GIT_REPO}"
                         echo "branch:${GIT_BRANCH}"
                         echo "env repo: ${GIT_ENV_REPO}"
-                        echo "env file: ${ENCRYPT_SEC}"
+                        echo "env file: ${env.ENCRYPT_SEC}"
                       }
                   }        
             }            
@@ -83,7 +77,7 @@ spec:
         stage('config env') {
             steps {
               container('sops') {
-            withCredentials([sshUserPrivateKey(credentialsId: "${CREDENTIALS}", keyFileVariable: 'keyfile')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: "${GITCRED}", keyFileVariable: 'keyfile')]) {
                 sh "mkdir ~/.ssh/"
                 sh 'ssh-agent /bin/bash' 
                 sh 'ssh-keyscan github.com  >> ~/.ssh/known_hosts' 
@@ -93,12 +87,12 @@ spec:
            withCredentials([file(credentialsId: 'jenkins-sops-pvt-key', variable: 'FILE')]) {
               sh 'gpg --import $FILE'    
               sh "gpg --list-keys"
-              sh "sops -d ${ENCRYPT_SEC} > ${DECRYPT_SEC}"                
+              sh "sops -d ${env.ENCRYPT_SEC} > ${DECRYPT_SEC}"                
             }                               
 
                  sh "sops -v" 
                  sh "ls ./"
-                 sh "cat ${ENCRYPT_SEC}"                            
+                 sh "cat ${env.ENCRYPT_SEC}"                            
                 }
             }
     }
@@ -273,7 +267,7 @@ spec:
             steps {
                 script {
                             env.site = "http://${HOST}/${CHK_PATH}"
-                          	println('URL: '+ "${env.site}")
+                            println('URL: '+ "${env.site}")
                             def response = httpRequest "${env.site}"
                             println('Status: '+response.status)
                             env.httpcode = response.status
@@ -281,22 +275,22 @@ spec:
             }
           }
   }
-    post {
-
-			success {
-				slackSend channel: '#jenkins',
-				color: 'good',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-        script{ GitBuildBadge.setStatus('passing')}
-				}
-			failure {
-				slackSend channel: '#jenkins',
-				color: 'warning',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
-          script{
-            GitBuildBadge.setStatus('failing')
-            GitBuildBadge.setColor('pink')
-          }
-				}
-    }
+//     post {
+//
+// 			success {
+// 				slackSend channel: '#jenkins',
+// 				color: 'good',
+// 				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+//         script{ GitBuildBadge.setStatus('passing')}
+// 				}
+// 			failure {
+// 				slackSend channel: '#jenkins',
+// 				color: 'warning',
+// 				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
+//           script{
+//             GitBuildBadge.setStatus('failing')
+//             GitBuildBadge.setColor('pink')
+//           }
+// 				}
+//     }
 }
