@@ -17,6 +17,7 @@ DECRYPT_SEC = "secrets.env"
 
 
 //production env
+PRDAKS     = "104.208.105.208"
 PRDHOST    = "customer-reminder-service.betalabs.ai"
 
 //health check

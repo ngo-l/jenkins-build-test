@@ -175,7 +175,7 @@ spec:
                             env.PROD  = 1
                             def remote = [:]
                             remote.name = "kubectl-server"
-                            remote.host = "104.208.105.208"
+                            remote.host = "${PRDAKS}"
                             remote.allowAnyHosts = true
                             env.secret = "${DECRYPT_SEC}"
                             env.yaml = "${TARGET_DIR}/deploy.yaml"
@@ -227,7 +227,7 @@ spec:
                               script{
                                   def remote = [:]
                                   remote.name = "kubectl-server"
-                                  remote.host = "104.208.105.208"
+                                  remote.host = "${PRDAKS}"
                                   remote.allowAnyHosts = true
                                   env.POD_SH = "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'"
                                   
