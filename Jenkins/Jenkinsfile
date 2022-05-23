@@ -60,11 +60,13 @@ spec:
                           script{
                             //config branch deploy
                             if (env.GIT_BRANCH == "origin/master") {
-                              DEPLOY = "production"
-                              ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
+                                DEPLOY = "production"
+                                ENCRYPT_SEC = "${PRD_ENCRYPT_SEC}"
+                                HOST = "${PRDHOST}"                            
                               }else{
-                              DEPLOY = "staging"
-                              ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
+                                DEPLOY = "staging"
+                                ENCRYPT_SEC = "${STG_ENCRYPT_SEC}"
+                                HOST = "${STGHOST}" 
                               }
                           }                        
                         //<--slack user-->
@@ -267,18 +269,17 @@ spec:
             }
 
 
-
-//         stage('public endpoint check') {
-//             steps {
-//                 script {
-//                             env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-//                           	println('URL: '+ "${env.site}")
-//                             def response = httpRequest "${env.site}"
-//                             println('Status: '+response.status)
-//                             env.httpcode = response.status
-//                 }
-//             }
-//           }
+        stage('public endpoint check') {
+            steps {
+                script {
+                            env.site = "http://${HOST}/${CHK_PATH}"
+                          	println('URL: '+ "${env.site}")
+                            def response = httpRequest "${env.site}"
+                            println('Status: '+response.status)
+                            env.httpcode = response.status
+                }
+            }
+          }
   }
 //     post {
 //
