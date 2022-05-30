@@ -58,12 +58,12 @@ spec:
                       container('buildah') {
                       load "Jenkins/Jenkinsenv"
                       //<--slack user-->
-				              wrap([$class: 'BuildUser']) { script { env.USER_ID = ${BUILD_USER_ID} != null ? "${BUILD_USER_ID}" : "PR-Merge" } }
+				              wrap([$class: 'BuildUser']) { script { USER = "${BUILD_USER_ID}" } }
                           script{
                             //config branch deploy
                               DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
                               HOST = env.GIT_BRANCH == "origin/master" ? "${PRDHOST}" : "${STGHOST}"
-                              
+                              env.USER_ID = USER != null ? "${user}" : "PR-Merge"
                               env.ENCRYPT_SEC = "devops-deployment-env/${APPNAME}/${DEPLOY}/secrets.enc.env"                              
                           }                        
 
