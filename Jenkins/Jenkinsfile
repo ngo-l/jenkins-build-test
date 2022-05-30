@@ -69,6 +69,7 @@ spec:
                         echo "env repo: ${GIT_ENV_REPO}"
                         echo "env file: ${env.ENCRYPT_SEC}"
                          echo "env file: ${env.ENCRYPT_SEC}"
+                        echo "user: ${env.USER_ID}"
                         sh("printenv | sort")
                       }
                   }        
