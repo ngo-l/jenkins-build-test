@@ -63,8 +63,7 @@ spec:
                               HOST = env.GIT_BRANCH == "origin/master" ? "${PRDHOST}" : "${STGHOST}"
                               env.ENCRYPT_SEC = "devops-deployment-env/${APPNAME}/${DEPLOY}/secrets.enc.env"                              
                           }                        
-                        //<--slack user-->
-				                wrap([$class: 'BuildUser']) { script { env.USER_ID = "${BUILD_USER_ID}" } }
+
                         echo "repo:${GIT_REPO}"
                         echo "branch:${GIT_BRANCH}"
                         echo "env repo: ${GIT_ENV_REPO}"
