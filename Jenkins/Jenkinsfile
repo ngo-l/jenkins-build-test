@@ -61,7 +61,7 @@ spec:
                             //config branch deploy
                               DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
                               HOST = env.GIT_BRANCH == "origin/master" ? "${PRDHOST}" : "${STGHOST}"
-                              env.USER = env.USER_ID == "null" ? "PR-Merge" : "${env.USER_ID}"
+                              USER = env.USER_ID = null ? "PR-Merge" : "${env.USER_ID}"
                               env.ENCRYPT_SEC = "devops-deployment-env/${APPNAME}/${DEPLOY}/secrets.enc.env"                              
                           }                        
 
@@ -70,7 +70,7 @@ spec:
                         echo "env repo: ${GIT_ENV_REPO}"
                         echo "env file: ${env.ENCRYPT_SEC}"
                          echo "env file: ${env.ENCRYPT_SEC}"
-                        echo "user: ${env.USER}"
+                        echo "user: ${USER}"
                         sh("printenv | sort")
                       }
                   }        
