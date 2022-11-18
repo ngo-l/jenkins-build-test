@@ -206,79 +206,75 @@ spec:
                             echo "Deployment fails, please check."
                         }                  
                           else if( env.STAGING >= 1){  
-                          container('kubectl') {    
-                            sh "sleep 60" //rolling deploy buffer             
-                            POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'").trim()
-                            POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
-                            echo "New deploy POD IP:${POD_IP}"
-                            env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                            echo "Private endpoint: ${env.site}"
-                          	println('URL: '+ "${env.site}")                            
-                            timeout(time: 30, unit: "SECONDS") {
-                                waitUntil {
-                                    script {
-                                        try{
-                                            def response = httpRequest "${env.site}"
-                                            return (response.status == 200)
-                                            println('Status: '+response.status)  
+                              container('kubectl') {    
+                                sh "sleep 60" //rolling deploy buffer             
+                                POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'").trim()
+                                POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
+                                echo "New deploy POD IP:${POD_IP}"
+                                env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                echo "Private endpoint: ${env.site}"
+                                println('URL: '+ "${env.site}")                            
+                                timeout(time: 30, unit: "SECONDS") {
+                                    waitUntil {
+                                        script {
+                                            try{
+                                                def response = httpRequest "${env.site}"
+                                                return (response.status == 200)
+                                                println('Status: '+response.status)  
+                                            }
+                                            catch (exception) {
+                                                echo "Private endpoint get fail status code or cannot get code "
+                                                currentBuild.result = "FAILURE"
+                                            }                                        
                                         }
-                                        catch (exception) {
-                                            echo "Private endpoint get fail status code or cannot get code "
-                                            currentBuild.result = "FAILURE"
-                                        }                                        
                                     }
-                                }
-                            }                         
-                          }
-                        } else if( env.PROD >= 1){                  
-                            container('kubectl') {
-                              sh "sleep 60" //rolling deploy buffer 
-                              script{
-                                  def remote = [:]
-                                  remote.name = "kubectl-server"
-                                  remote.host = "${PRDAKS}"
-                                  remote.allowAnyHosts = true
-                                  env.POD_SH = "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'"
-                                  
-                                  withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
-                                  remote.user = userName
-                                  remote.identityFile = identity
-                                  remote.allowAnyHosts = true
-                                  def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
-
-                                  env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
-                                  def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
-                                  echo "New deploy POD IP:${POD_IP}"
-                                  env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                                  echo "Private endpoint: ${env.site}"
-
-                                  env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
-
-
-                                  timeout(time: 30, unit: "SECONDS") {
-                                      waitUntil {
-                                          script {
-                                              try{
-                                                  def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                  return (${SITE_CHK} >= 200 && "${SITE_CHK}" <= 204)
-                                                  echo "Private endpoint http status code: ${SITE_CHK} | Pass "
-                                              }
-                                              catch (exception) {
-                                                  echo "Private endpoint get fail status code or cannot get code "
-                                                  currentBuild.result = "FAILURE"
-                                              }                                        
-                                          }
-                                      }
-                                  }                                    
-
-
+                                }                         
                               }
-                            }                          
-                        }
-                }        
+                        } else if( env.PROD >= 1){                  
+                                container('kubectl') {
+                                  sh "sleep 60" //rolling deploy buffer 
+                                  script{
+                                      def remote = [:]
+                                      remote.name = "kubectl-server"
+                                      remote.host = "${PRDAKS}"
+                                      remote.allowAnyHosts = true
+                                      env.POD_SH = "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'"
+                                      
+                                      withCredentials([sshUserPrivateKey(credentialsId: 'aks-hk-prod-kubctl-ssh', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
+                                        remote.user = userName
+                                        remote.identityFile = identity
+                                        remote.allowAnyHosts = true
+                                        def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
 
-              }    
-            }
+                                        env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
+                                        def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
+                                        echo "New deploy POD IP:${POD_IP}"
+                                        env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                        echo "Private endpoint: ${env.site}"
+
+                                        env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
+                                            timeout(time: 30, unit: "SECONDS") {
+                                                waitUntil {
+                                                    script {
+                                                        try{
+                                                            def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
+                                                            return (${SITE_CHK} >= 200 && "${SITE_CHK}" <= 204)
+                                                            echo "Private endpoint http status code: ${SITE_CHK} | Pass "
+                                                        }
+                                                        catch (exception) {
+                                                            echo "Private endpoint get fail status code or cannot get code "
+                                                            currentBuild.result = "FAILURE"
+                                                        }                                        
+                                                    }
+                                                }
+                                            }       
+                                          }
+                                     }                          
+                                  }
+                              }  
+                      }       
+                    }
+                  }    
 
 
         stage('public endpoint check') {
@@ -310,5 +306,5 @@ spec:
     //       }
 		// 		}
     // }
-   }
+  
 }
