@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdxp-campaign-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cdxp-campaign-service
+  template:
+    metadata:
+      labels:
+        name: cdxp-campaign-service
+    spec:
+      containers:
+        - name: cdxp-campaign-service
+          image: betalabsk8sacr.azurecr.io/cdxp/cdxp-campaign-service:0.1.1
+          imagePullPolicy: Always
+          env:
+            # postgresql
+            - name: APP_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: host
+            - name: APP_DATABASE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: database
+            - name: APP_DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: username
+            - name: APP_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: password
+
+            # jwt
+            - name: APP_JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt
+                  key: jwt_secret_key
+
+            # databricks
+            - name: APP_DATABRICKS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: databricks
+                  key: host
+            - name: APP_DATABRICKS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: databricks
+                  key: token
+            - name: APP_DATABRICKS_JOBS
+              value: '{"estimate_audience_size":86,"campaign_launch":74}'
+
+            # storage account
+            - name: AZURE_STORAGE_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: storageaccount
+                  key: connection_string
+
+            # emarsys
+            - name: APP_EMARSYS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: emarsys
+                  key: user
+            - name: APP_EMARSYS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: emarsys
+                  key: token
+
+            - name: APP_CAMPAIGN_SCHEDULE_MINUTES_IN_ADVANCE
+              value: "180"
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

@@ -1,10 +1,10 @@
 
 //staging env 
-NS = "lcjg"
-APPIMG  = "betalabsk8sacr.azurecr.io/lcjg/lcjg-reminder-service"
-APPNAME = "lcjg-reminder-service"
-APPPORT = '8080'
-STGHOST = "stg-customer-reminder-service.betalabs.ai"
+NS = "cdxp"
+APPIMG  = "betalabsk8sacr.azurecr.io/cdxp/cdxp-campaign-service"
+APPNAME = "cdxp-campaign-service"
+APPPORT = '8000'
+STGHOST = "stg-cdxp-api.betalabs.ai"
 TARGET_DIR = "Jenkins"
 
 //Jobs 
@@ -17,8 +17,8 @@ DECRYPT_SEC = "secrets.env"
 
 
 //production env
-PRDAKS     = "104.208.105.208"
-PRDHOST    = "customer-reminder-service.betalabs.ai"
+PRDAKS     = "20.239.180.16"
+PRDHOST    = "cdxp-api.betalabs.ai"
 
 //health check
 CHK_PATH = "healthz"

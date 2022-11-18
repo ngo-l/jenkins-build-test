@@ -8,7 +8,7 @@ kind: Pod
 spec:
   containers:
   - name: buildah
-    image: betalabsk8sacr.azurecr.io/buildah:v1
+    image: betalabsk8sacr.azurecr.io/buildah:v1.21
     securityContext:
       privileged: true
     command:
@@ -34,22 +34,22 @@ spec:
         }
     }
 
-    triggers {
-    GenericTrigger(
-    genericVariables: [
-                      [key: 'action', value: '$.action'],
-                      [key: 'merged', value: '$.pull_request.merged'],
-                      [key: 'ref', value: '$.pull_request.base.ref']
-              ],
-              causeString: 'Triggered on pr merge',
-              token: "_job_name",
-              printContributedVariables: true,
-              printPostContent: true,
-              silentResponse: false,
-              regexpFilterText: '$action#$merged#$ref',
-              regexpFilterExpression: 'closed#true#staging'
-    )
-  }
+/*       triggers {
+      GenericTrigger(
+      genericVariables: [
+                        [key: 'action', value: '$.action'],
+                        [key: 'merged', value: '$.pull_request.merged'],
+                        [key: 'ref', value: '$.pull_request.base.ref']
+                ],
+                causeString: 'Triggered on pr merge',
+                token: "_job_name",
+                printContributedVariables: true,
+                printPostContent: true,
+                silentResponse: false,
+                regexpFilterText: '$action#$merged#$ref',
+                regexpFilterExpression: 'closed#true#staging'
+      )
+    } */
 
    stages {              
 
@@ -63,8 +63,6 @@ spec:
                               HOST = env.GIT_BRANCH == "origin/master" ? "${PRDHOST}" : "${STGHOST}"
                               env.ENCRYPT_SEC = "devops-deployment-env/${APPNAME}/${DEPLOY}/secrets.enc.env"                              
                           }                        
-                        //<--slack user-->
-				                wrap([$class: 'BuildUser']) { script { env.USER_ID = "${BUILD_USER_ID}" } }
                         echo "repo:${GIT_REPO}"
                         echo "branch:${GIT_BRANCH}"
                         echo "env repo: ${GIT_ENV_REPO}"
@@ -102,30 +100,29 @@ spec:
     stage('build image') {
       steps {
         container('buildah') {
-
-            sh 'pwd && ls ./'
             //get git commit hash version
             script{
                 def GIT_TAG = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
                 env.git_tag = "${GIT_TAG}"
                  }
-           // sh  "buildah bud -t ${APPIMG}:${GIT_TAG}"
+            withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
+                  sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"
+                  sh  "buildah bud -t ${APPIMG}:${GIT_TAG}"
+                  }
         }
       }
     }
 
- //
-//         stage('Push image') {
-//         steps {
-//             container('buildah') {
-//                 withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
-//                     sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"
-//                     sh "buildah images"
-//                     sh "buildah push ${APPIMG}:${GIT_TAG}"
-//                 }
-//             }
-//         }
-//     }
+        stage('Push image') {
+        steps {
+            container('buildah') {
+            withCredentials([usernamePassword(credentialsId: 'betalabsk8sacr', passwordVariable: 'PWD', usernameVariable: 'USER')]) {
+                  sh "buildah login -u=${USER} -p=${PWD} betalabsk8sacr.azurecr.io"
+                  sh "buildah push ${APPIMG}:${GIT_TAG}"
+                  }            
+            }
+        }
+    }
 
         stage('config deploy') {
             steps {
@@ -144,7 +141,7 @@ spec:
         stage('aks staging deploy') {
               when{
                 expression {
-                  return env.GIT_BRANCH == "origin/staging" || env.GIT_BRANCH.contains("origin/test")
+                  return env.GIT_BRANCH == "origin/staging" || env.GIT_BRANCH.startsWith("origin/cicd-")
                 }
               }               
             steps {
@@ -152,9 +149,9 @@ spec:
                         withCredentials([file(credentialsId: 'stg-aks-hk-config', variable: 'FILE')]) {
                             sh "cp ${FILE} /root/.kube/"
                         }
-//                         sh "kubectl delete secret ${DECRYPT_SEC} -n ${NS} || true"
-//                         sh "kubectl create secret generic ${DECRYPT_SEC} --from-file=${DECRYPT_SEC} -n ${NS} || true"
-//                         sh "kubectl apply -f ${TARGET_DIR}/deploy.yaml -n ${NS}"
+                        sh "kubectl delete secret ${DECRYPT_SEC} -n ${NS} || true"
+                        sh "kubectl create secret generic ${DECRYPT_SEC} --from-file=${DECRYPT_SEC} -n ${NS} || true"
+                        sh "kubectl apply -f ${TARGET_DIR}/deploy.yaml -n ${NS}"
                         sh "kubectl get ing -n ${NS}"
                       }
                         script{env.STAGING = 1} 
@@ -186,15 +183,15 @@ spec:
                             remote.user = userName
                             remote.identityFile = identity
                             remote.allowAnyHosts = true
-//                                         sshPut remote: remote, from: env.yaml , into: '.'
-//                                         sshPut remote: remote, from: env.secret , into: '.'
-//                                         sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
-//                                         sshCommand remote: remote, command: "kubectl create secret generic $env.secret --from-file=$env.secret -n $env.ns"
-//                                         sshCommand remote: remote, command: "kubectl apply -f deploy.yaml -n $env.ns"
-//                                         sshCommand remote: remote, command: "kubectl get svc -n $env.ns"
+                                        sshPut remote: remote, from: env.yaml , into: '.'
+                                        sshPut remote: remote, from: env.secret , into: '.'
+                                        sshCommand remote: remote, command: "kubectl delete secret $env.secret -n $env.ns || true"
+                                        sshCommand remote: remote, command: "kubectl create secret generic $env.secret --from-file=$env.secret -n $env.ns"
+                                        sshCommand remote: remote, command: "kubectl apply -f deploy.yaml -n $env.ns"
+                                        sshCommand remote: remote, command: "kubectl get svc -n $env.ns"
                                         sshCommand remote: remote, command: "kubectl get ing -n $env.ns"
-//                                         sshRemove remote: remote, path: "deploy.yaml"
-//                                         sshRemove remote: remote, path: env.secret
+                                        sshRemove remote: remote, path: "deploy.yaml"
+                                        sshRemove remote: remote, path: env.secret
                             }
                         }
                       }
@@ -216,10 +213,22 @@ spec:
                             echo "New deploy POD IP:${POD_IP}"
                             env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                             echo "Private endpoint: ${env.site}"
-                          	println('URL: '+ "${env.site}")
-                            def response = httpRequest "${env.site}"
-                            println('Status: '+response.status)
-                            env.httpcode = response.status                            
+                          	println('URL: '+ "${env.site}")                            
+                            timeout(time: 30, unit: "SECONDS") {
+                                waitUntil {
+                                    script {
+                                        try{
+                                            def response = httpRequest "${env.site}"
+                                            return (response.status == 200)
+                                            println('Status: '+response.status)  
+                                        }
+                                        catch (exception) {
+                                            echo "Private endpoint get fail status code or cannot get code "
+                                            currentBuild.result = "FAILURE"
+                                        }                                        
+                                    }
+                                }
+                            }                         
                           }
                         } else if( env.PROD >= 1){                  
                             container('kubectl') {
@@ -244,16 +253,25 @@ spec:
                                   echo "Private endpoint: ${env.site}"
 
                                   env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
-                                  def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                  
 
-                                      if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
-                                        echo "Private endpoint http status code: ${SITE_CHK} | Pass "                                       
-                                      } else { 
-                                        echo "Private endpoint http status code: ${SITE_CHK} | Fail "
-                                        currentBuild.result = "FAILURE"
-                                        }
-                                  }
+
+                                  timeout(time: 30, unit: "SECONDS") {
+                                      waitUntil {
+                                          script {
+                                              try{
+                                                  def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
+                                                  return (${SITE_CHK} >= 200 && "${SITE_CHK}" <= 204)
+                                                  echo "Private endpoint http status code: ${SITE_CHK} | Pass "
+                                              }
+                                              catch (exception) {
+                                                  echo "Private endpoint get fail status code or cannot get code "
+                                                  currentBuild.result = "FAILURE"
+                                              }                                        
+                                          }
+                                      }
+                                  }                                    
+
+
                               }
                             }                          
                         }
@@ -270,27 +288,26 @@ spec:
                             println('URL: '+ "${env.site}")
                             def response = httpRequest "${env.site}"
                             println('Status: '+response.status)
-                            env.httpcode = response.status
                 }
             }
           }
   }
-//     post {
-//
-// 			success {
-// 				slackSend channel: '#jenkins',
-// 				color: 'good',
-// 				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully by ${env.USER_ID}. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-//         script{ GitBuildBadge.setStatus('passing')}
-// 				}
-// 			failure {
-// 				slackSend channel: '#jenkins',
-// 				color: 'warning',
-// 				message: "The pipeline ${currentBuild.fullDisplayName}, build failed by ${env.USER_ID}. Check console result at $BUILD_URL."
-//           script{
-//             GitBuildBadge.setStatus('failing')
-//             GitBuildBadge.setColor('pink')
-//           }
-// 				}
-//     }
+    // post {
+
+		// 	success {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'good',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
+    //     script{ GitBuildBadge.setStatus('passing')}
+		// 		}
+		// 	failure {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'warning',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+    //       script{
+    //         GitBuildBadge.setStatus('failing')
+    //         GitBuildBadge.setColor('pink')
+    //       }
+		// 		}
+    // }
 }

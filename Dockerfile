@@ -1,9 +1,5 @@
-FROM python:3.10-slim-buster
+FROM betalabsk8sacr.azurecr.io/python-backend:202209
 
-RUN apt update && \
-  apt install -y gcc && \
-  pip install poetry && \
-  poetry config virtualenvs.create false
 
 WORKDIR /code
 
@@ -11,6 +7,7 @@ COPY pyproject.toml poetry.lock ./
 
 RUN poetry install --no-dev
 
-COPY src src
+COPY cdxp_api cdxp_api
+COPY conf conf
 
-CMD ["python", "-m", "src.main"]
+CMD ["python", "-m", "cdxp_api"]

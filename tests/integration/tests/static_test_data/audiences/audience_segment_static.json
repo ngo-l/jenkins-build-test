@@ -1,0 +1,25 @@
+{
+    "name": "integration_test",
+    "filters": {
+        "id": "string",
+        "type": "group",
+        "level": 4,
+        "conjunction": "and",
+        "rules": [
+            {
+                "id": "string",
+                "type": "rule",
+                "field": "gender",
+                "operator": "in",
+                "value": ["Female"]
+            },
+            {
+                "id": "string",
+                "type": "rule",
+                "field": "nationality",
+                "operator": "in",
+                "value": ["HKC"]
+            }
+        ]
+    }
+}

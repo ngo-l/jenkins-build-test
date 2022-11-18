@@ -21,6 +21,8 @@ spec:
         - name: _appname
           image: _appimg
           imagePullPolicy: Always
+          securityContext:
+            privileged: true                
           env:
           - name: DEPLOYMENT_ENVIRONMENT
             value: "_env"
@@ -41,11 +43,11 @@ spec:
             periodSeconds: 30
           resources:
             limits:
-              cpu: 512m
-              memory: 512Mi
+              cpu: 1000m
+              memory: 5G
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 1000m
+              memory: 5G
 #      tolerations:
 #        - effect: NoSchedule
 #          operator: Exists
