@@ -259,7 +259,6 @@ spec:
                                                         try{
                                                             def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                                             return (${SITE_CHK} >= 200 && ${SITE_CHK} <= 204)
-                                                            expression { return A || B }
                                                             //echo "Private endpoint http status code: ${SITE_CHK} | Pass "
                                                         }
                                                         catch (exception) {
