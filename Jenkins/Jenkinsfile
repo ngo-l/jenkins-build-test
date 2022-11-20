@@ -249,23 +249,21 @@ spec:
                                         env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
                                         def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                         echo "New deploy POD IP:${POD_IP}"
-                                        env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                        env.site = "http://${POD_IP}:${APPPORT}/test"
                                         echo "Private endpoint: ${env.site}"
 
                                         env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
                                             timeout(time: 30, unit: "SECONDS") {
                                                 waitUntil {
                                                     script {
-
-                                                            def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                        if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
-                                                              echo "Private endpoint http status code: ${SITE_CHK} | Pass "
-                                                              return true
-                                                            }else {
-                                                              echo "Private endpoint http status code: ${SITE_CHK} | Fail "
-                                                              return false
-                                                            }
-                                     
+                                                          def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
+                                                          if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
+                                                                echo "Private endpoint http status code: ${SITE_CHK} | Pass "
+                                                                return true
+                                                              }else {
+                                                                echo "Private endpoint http status code: ${SITE_CHK} | Fail "
+                                                                return false
+                                                              }                                    
                                                     }
                                                 }
                                             }       
