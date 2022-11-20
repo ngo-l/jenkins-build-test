@@ -257,14 +257,20 @@ spec:
                                             timeout(time: 30, unit: "SECONDS") {
                                                 waitUntil {
                                                     script {
-                                                          def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                          if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
+                                                                def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true                                                         
+                                                          try{
+                                                                if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
                                                                 echo "Private endpoint http status code: ${SITE_CHK} | Pass "
                                                                 return true
                                                               }else {
-                                                                echo "Private endpoint http status code: ${SITE_CHK} | Fail "
-                                                                currentBuild.result = "FAILURE"
-                                                              }                                    
+                                                                echo "Get fail status code: ${SITE_CHK} "
+                                                                return false                                                              
+                                                              }
+                                                          }
+                                                          catch (exception) {
+                                                              echo "Private endpoint http status code: ${SITE_CHK} | Fail "
+                                                              currentBuild.result = "FAILURE"
+                                                          }                                            
                                                     }
                                                 }
                                             }       
