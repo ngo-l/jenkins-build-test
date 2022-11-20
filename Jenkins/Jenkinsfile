@@ -258,8 +258,13 @@ spec:
                                                     script {
 
                                                             def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                            echo "status: ${SITE_CHK}"
-
+                                                        if ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204){
+                                                              echo "Private endpoint http status code: ${SITE_CHK} | Pass "
+                                                              return true
+                                                            }else {
+                                                              echo "Private endpoint http status code: ${SITE_CHK} | Fail "
+                                                              return false
+                                                            }
                                      
                                                     }
                                                 }
