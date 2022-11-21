@@ -200,7 +200,7 @@ spec:
 
         stage('private endpoint check') {
             steps {
-              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE')
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
                 script{
                          if (env.STAGING < 1 && env.PROD < 1) {
                             currentBuild.result = "FAILURE"
@@ -231,7 +231,8 @@ spec:
                                     }
                                 }                         
                               }
-                        } else if( env.PROD >= 1){                  
+                        } 
+                          else if( env.PROD >= 1){                  
                                 container('kubectl') {
                                   sh "sleep 60" //rolling deploy buffer 
                                   script{
@@ -266,7 +267,8 @@ spec:
                                           }
                                      }                          
                                   }
-                              }  
+                              }
+                        }      
                       }       
                     }
                   }    
