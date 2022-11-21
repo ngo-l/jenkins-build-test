@@ -200,6 +200,7 @@ spec:
 
         stage('private endpoint check') {
             steps {
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE')
                 script{
                          if (env.STAGING < 1 && env.PROD < 1) {
                             currentBuild.result = "FAILURE"
@@ -261,10 +262,7 @@ spec:
                                                   return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204) 
                                                   }
                                                 }
-                                              }
-                                              catch(exception) {
-                                                return false
-                                              }      
+                                              } 
                                           }
                                      }                          
                                   }
