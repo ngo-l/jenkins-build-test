@@ -200,6 +200,7 @@ spec:
 
         stage('private endpoint check') {
             steps {
+              //catch steps error 
               catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
                 script{
                          if (env.STAGING < 1 && env.PROD < 1) {
@@ -215,21 +216,18 @@ spec:
                                 env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                 echo "Private endpoint: ${env.site}"
                                 println('URL: '+ "${env.site}")                            
-                                timeout(time: 30, unit: "SECONDS") {
-                                    waitUntil {
-                                        script {
-                                            try{
+                                          try{
+                                              timeout(time: 30, unit: "SECONDS") {
+                                              waitUntil {
                                                 def response = httpRequest "${env.site}"
                                                 return (response.status == 200)
-                                                println('Status: '+response.status)  
-                                            }
-                                            catch (exception) {
-                                                echo "Private endpoint get fail status code or cannot get code "
-                                                currentBuild.result = "FAILURE"
-                                            }                                        
-                                        }
-                                    }
-                                }                         
+                                                }
+                                              }
+                                          }  
+                                          catch (exception) {
+                                              currentBuild.result = "FAILURE"
+                                              error('Private endpoint get fail status code or cannot get code')
+                                          }                                
                               }
                         } 
                           else if( env.PROD >= 1){                  
@@ -247,28 +245,24 @@ spec:
                                         remote.identityFile = identity
                                         remote.allowAnyHosts = true
                                         def POD = sshCommand remote: remote, command: env.POD_SH, sudo: true  
-
                                         env.POD_IP_SH = "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}"
                                         def POD_IP = sshCommand remote: remote, command: env.POD_IP_SH, sudo: true                                 
                                         echo "New deploy POD IP:${POD_IP}"
                                         //env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
                                         env.site = "http://${POD_IP}:${APPPORT}/test"
                                         echo "Private endpoint: ${env.site}"
-
                                         env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
-
                                             try{
-                                                timeout(time: 10, unit: "SECONDS") {
-                                                  waitUntil {
+                                                timeout(time: 30, unit: "SECONDS") {
+                                                waitUntil {
                                                   def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                                   return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204) 
                                                   }
                                                 }
                                             }  
                                             catch (exception) {
-                                                echo "Private endpoint get fail status code or cannot get code "
                                                 currentBuild.result = "FAILURE"
-                                                error('fail code')
+                                                error('Private endpoint get fail status code or cannot get code')
                                             } 
                                           }
                                      }                          
@@ -291,23 +285,21 @@ spec:
             }
           }
   }
-    // post {
-
-		// 	success {
-		// 		slackSend channel: '#jenkins',
-		// 		color: 'good',
-		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
-    //     script{ GitBuildBadge.setStatus('passing')}
-		// 		}
-		// 	failure {
-		// 		slackSend channel: '#jenkins',
-		// 		color: 'warning',
-		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
-    //       script{
-    //         GitBuildBadge.setStatus('failing')
-    //         GitBuildBadge.setColor('pink')
-    //       }
-		// 		}
-    // }
-  
+    post {
+			success {
+				slackSend channel: '#jenkins',
+				color: 'good',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
+        script{ GitBuildBadge.setStatus('passing')}
+				}
+			failure {
+				slackSend channel: '#jenkins',
+				color: 'warning',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+          script{
+            GitBuildBadge.setStatus('failing')
+            GitBuildBadge.setColor('pink')
+          }
+				}
+    } 
 }
