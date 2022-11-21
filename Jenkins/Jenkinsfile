@@ -268,6 +268,7 @@ spec:
                                             catch (exception) {
                                                 echo "Private endpoint get fail status code or cannot get code "
                                                 currentBuild.result = "FAILURE"
+                                                return false
                                             } 
                                           }
                                      }                          
