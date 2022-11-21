@@ -288,23 +288,21 @@ spec:
             }
           }
   }
-    // post {
-
-		// 	success {
-		// 		slackSend channel: '#jenkins',
-		// 		color: 'good',
-		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
-    //     script{ GitBuildBadge.setStatus('passing')}
-		// 		}
-		// 	failure {
-		// 		slackSend channel: '#jenkins',
-		// 		color: 'warning',
-		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
-    //       script{
-    //         GitBuildBadge.setStatus('failing')
-    //         GitBuildBadge.setColor('pink')
-    //       }
-		// 		}
-    // }
-  
+    post {
+			success {
+				slackSend channel: '#jenkins',
+				color: 'good',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
+        script{ GitBuildBadge.setStatus('passing')}
+				}
+			failure {
+				slackSend channel: '#jenkins',
+				color: 'warning',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+          script{
+            GitBuildBadge.setStatus('failing')
+            GitBuildBadge.setColor('pink')
+          }
+				}
+    } 
 }
