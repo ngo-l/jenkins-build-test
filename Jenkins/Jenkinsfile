@@ -263,9 +263,8 @@ spec:
                                                 }
                                                 echo "timeout end"
                                               }
-                                              catch(e) {
-                                                println "TIMEOUT" // Will never get here
-                                                throw e
+                                              catch(exception) {
+                                                return false
                                               }      
                                           }
                                      }                          
