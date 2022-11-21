@@ -214,19 +214,21 @@ spec:
                                 POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                                 echo "New deploy POD IP:${POD_IP}"
                                 env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
+                                env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"                    
                                 echo "Private endpoint: ${env.site}"
                                 println('URL: '+ "${env.site}")                            
                                           try{
-                                              timeout(time: 30, unit: "SECONDS") {
+                                              timeout(time: 10, unit: "SECONDS") {
                                               waitUntil {
-                                                def response = httpRequest "${env.site}"
-                                                return (response.status == 200)
+                                                def SITE_CHK = sh(returnStdout: true, script: "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}").trim()
+                                                echo "${SITE_CHK}"
+                                                return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204)
                                                 }
                                               }
                                           }  
                                           catch (exception) {
                                               currentBuild.result = "FAILURE"
-                                              error('Private endpoint get fail status code or cannot get code')
+                                              error("Private endpoint get fail status code or cannot get code")
                                           }                                
                               }
                         } 
