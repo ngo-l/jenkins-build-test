@@ -261,10 +261,16 @@ spec:
                                                                 def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                                                 return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204)                 
                                                           }
-                                                          catch (exception) {
-                                                              echo "Private endpoint http status code: ${SITE_CHK} | Fail "
-                                                              currentBuild.result = "FAILURE"
-                                                          }                                            
+                                                          catch (err) {
+                                                              echo err
+                                                              //echo "Private endpoint http status code: ${SITE_CHK} | Fail "
+                                                              BUILD_RESULT = "FAILURE"
+                                                          } 
+                                                          finally {
+                                                          currentBuild.result = "${BUILD_RESULT}"
+                                                          echo "Private endpoint http status code: ${SITE_CHK}"
+                                                          //do job
+                                                      }                                           
                                                     }
                                                 }
                                             }       
@@ -288,21 +294,23 @@ spec:
             }
           }
   }
-    post {
-			success {
-				slackSend channel: '#jenkins',
-				color: 'good',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
-        script{ GitBuildBadge.setStatus('passing')}
-				}
-			failure {
-				slackSend channel: '#jenkins',
-				color: 'warning',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
-          script{
-            GitBuildBadge.setStatus('failing')
-            GitBuildBadge.setColor('pink')
-          }
-				}
-    } 
+    // post {
+
+		// 	success {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'good',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. Check console result at $BUILD_URL "
+    //     script{ GitBuildBadge.setStatus('passing')}
+		// 		}
+		// 	failure {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'warning',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+    //       script{
+    //         GitBuildBadge.setStatus('failing')
+    //         GitBuildBadge.setColor('pink')
+    //       }
+		// 		}
+    // }
+  
 }
