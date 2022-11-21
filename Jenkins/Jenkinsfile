@@ -254,8 +254,9 @@ spec:
                                         echo "Private endpoint: ${env.site}"
 
                                         env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
-                                            timeout(time: 30, unit: "SECONDS") {
+                                          
                                                 waitUntil {
+                                                    timeout(time: 30, unit: "SECONDS") {
                                                     script {                                                                                                                        
                                                           try{
                                                                 def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
