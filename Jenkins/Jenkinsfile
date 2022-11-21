@@ -261,7 +261,6 @@ spec:
                                                   return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204) 
                                                   }
                                                 }
-                                                echo "timeout end"
                                               }
                                               catch(exception) {
                                                 return false
