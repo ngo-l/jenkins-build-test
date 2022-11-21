@@ -258,7 +258,7 @@ spec:
                                         env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
 
                                             try{
-                                                timeout(time: 30, unit: "SECONDS") {
+                                                timeout(time: 10, unit: "SECONDS") {
                                                   waitUntil {
                                                   def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
                                                   return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204) 
@@ -268,7 +268,7 @@ spec:
                                             catch (exception) {
                                                 echo "Private endpoint get fail status code or cannot get code "
                                                 currentBuild.result = "FAILURE"
-                                                return false
+                                                error('fail code')
                                             } 
                                           }
                                      }                          
