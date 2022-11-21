@@ -255,24 +255,21 @@ spec:
 
                                         env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"
                                             timeout(time: 30, unit: "SECONDS") {
-
+                                                waitUntil {
                                                     script {                                                                                                                        
                                                           try{
                                                                 def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                                return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204)                 
+                                                                return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204)    
+         
                                                           }
                                                           catch (err) {
                                                               echo err
                                                               //echo "Private endpoint http status code: ${SITE_CHK} | Fail "
-                                                              BUILD_RESULT = "FAILURE"
+                                                              error 'Unknown error - aborting build'
                                                           } 
-                                                          finally {
-                                                          currentBuild.result = "${BUILD_RESULT}"
-                                                          echo "Private endpoint http status code: ${SITE_CHK}"
-                                                          //do job
-                                                      }                                           
+                                                                                   
                                                     }
-
+                                                }
                                             }       
                                           }
                                      }                          
