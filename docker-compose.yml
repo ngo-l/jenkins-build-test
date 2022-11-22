@@ -1,16 +1,6 @@
-version: "3.9"
+version: "3"
 
 services:
-  postgres:
-    image: postgres:11-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: cdxp-api
-      POSTGRES_USER: cdxp_campaign_service
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - 5432:5432
-
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     hostname: azurite
@@ -19,7 +9,7 @@ services:
     ports:
       - "10000:10000"
       - "10001:10001"
-  # cdxp_api:
+  # reminderservice:
   #   build:
   #     context: .
   #   ports:

@@ -213,16 +213,15 @@ spec:
                                 POD = sh(returnStdout: true, script: "kubectl get pods -n ${NS} --sort-by=.metadata.creationTimestamp | grep ${APPNAME} | tail -n 1 | awk '{print \$1}'").trim()
                                 POD_IP = sh(returnStdout: true, script: "kubectl get pods ${POD} -n ${NS} --template={{.status.podIP}}").trim()                      
                                 echo "New deploy POD IP:${POD_IP}"
-                                env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"
-                                env.SITECHK_SH = "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}"                    
+                                env.site = "http://${POD_IP}:${APPPORT}/${CHK_PATH}"                 
                                 echo "Private endpoint: ${env.site}"
                                 println('URL: '+ "${env.site}")                            
                                           try{
-                                              timeout(time: 10, unit: "SECONDS") {
+                                              timeout(time: 30, unit: "SECONDS") {
                                               waitUntil {
                                                 def SITE_CHK = sh(returnStdout: true, script: "curl -s -o /dev/null -w \"%{http_code}\" ${env.site}").trim()
                                                 echo "${SITE_CHK}"
-                                                return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204)
+                                                return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 307)
                                                 }
                                               }
                                           }  
@@ -257,7 +256,7 @@ spec:
                                                 timeout(time: 30, unit: "SECONDS") {
                                                 waitUntil {
                                                   def SITE_CHK = sshCommand remote: remote, command: env.SITECHK_SH, sudo: true
-                                                  return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 204) 
+                                                  return ("${SITE_CHK}" >= 200 && "${SITE_CHK}" <= 307) 
                                                   }
                                                 }
                                             }  

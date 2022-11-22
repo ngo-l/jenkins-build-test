@@ -1,44 +1,52 @@
-[![Build Status](http://jenkins.betalabs.ai/buildStatus/icon?job=stg-cdxp-api.betalabs.ai&subject=Jenkins%20staging%20Build)](http://jenkins.betalabs.ai/view/Project/job/stg-cdxp-api.betalabs.ai/)
+# lcjg-reminder-service
+[![Build Status](http://jenkins.betalabs.ai/buildStatus/icon?job=stg-lcjg-reminder-service&subject=Jenkins%20staging%20Build)](http://jenkins.betalabs.ai/view/Project/job/stg-lcjg-reminder-service/)
 
-[![Build Status](http://jenkins.betalabs.ai/buildStatus/icon?job=cdxp-api.betalabs.ai&subject=Jenkins%20Production%20Build)](http://jenkins.betalabs.ai/view/Project/job/cdxp-api.betalabs.ai/)
+[![Build Status](http://jenkins.betalabs.ai/buildStatus/icon?job=lcjg-reminder-service&subject=Jenkins%20Production%20Build)](http://jenkins.betalabs.ai/view/Project/job/lcjg-reminder-service/)
 
-# CDXP-CAMPAIGN-SERVICE
+microservice to serve reminders for LCJG customers
 
-## Prerequisites
+## Caveats
 
-1. SOPS
-1. Python 3.10+
-1. Poetry
-1. **Beta Labs VNet Hub**
+- all times are aligned to the UTC time, including cron job, please keep the alignment
 
-## Getting started (development)
+## Getting Started
 
-1. decrypt .staging.enc.env by SOPS
-1. docker compose up -d
+1. decrypt by SOPS: `sops -d conf/encrypted/.development.enc.env > conf/.development.env`
 1. `poetry install`
-1. `poetry run uvicorn cdxp_api.app:app --reload`
+1. `docker compose up -d` (blob storage was not configured, please create blob containers and files for your own use)
+1. `poetry run python3 -m src.main`
 
-### Connecting to staging
+### SOPS
 
-use staging database for integration, instead of using local docker database
+Secrets are encrypted via SOPS by the key `CDXP Shared SOPS private key` in 1Password
 
-1. connect Beta Labs VNet Hub
-1. make sure the env is connecting to a valid DB (RND DB needs to be 13.0.0.49 in this stage)
+The secrets are placed in `conf/secrets` folder, and loaded by secrets_utils in `src/_shared`
 
-### docker compose - Postgresql
+Please read ALL credentials from the same secrets file, **extra files/changes will need to request devops to change deployment setups**
 
-if database is not created in docker compose, `docker volume prune` might be used to recreeate the container with env settings
+### Docker Compose
 
-## Emarsys
+docker compose is used to build local development env
 
-This service is tightly coupled with Emarsys API for sending email via the external events at this point
-Emarsys Campaign (email template) is mapped by the automation program setting in Emarsys Portal
-please refer to the [Eamrsys API](https://dev.emarsys.com/docs/emarsys-api/b3A6MjQ4OTk4MzU-launch-an-email-campaign) for API inetgration
+Azurite is included to simulate use of blob storage
 
-The service should also decouple with Emarsys ASAP
+## Admin functions
 
-### Testing
+Swagger document can be found at
 
-Please use event ID 3120 to send testing emails
+`http(s)://{host}/docs`
 
-## System Integration Flow
+HTTP Basic Authentication is applied
+
+## Emarsys integration
+
+The service sends email via Emarsys external event
+
+Username and token obtained from 1Password, `LC Emarsys API`
+
+## Abandoned Cart Reminder
+
+1. The service reads labelled data from blob storage named "databricksshare" (path may vary, please find from env file)
+1. external event triggers are created in chunks (common limit of communincation services including Emarsys is 1000 recipients per request)
+1. result is written to processed folder suffixed by timestamp and chunk number
+
