@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: Elsie Serverless Functions - OpenAPI 3.0
+
+
+  version: 1.0.
+servers:
+  - url: http://localhost:7071/api
+
+paths:
+
+  /create-user:
+    post:
+      tags:
+        - create-user
+      summary: create one user in the USER_INFO of the Elsie Database
+      description: ''
+      operationId: create-user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        
+        '400':
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /update-staff-customer:
+    post:
+      tags:
+        - update-staff-customer
+      summary: truncate and insert into  STAFF_CUSTOMERS table of the elsie database
+      description: ''
+      operationId: update-staff-customer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        
+        '400':
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /update-manager:
+    post:
+      tags:
+        - update-manager
+      summary: truncate and insert into  MANAGERS and MANAGER_SUPERVISOR_MAPPING table of the elsie database
+      description: ''
+      operationId: update-manager
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        
+        '400':
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /update-storemanager:
+    post:
+      tags:
+        - update-storemanager
+      summary: truncate and insert into  STOREMANAGERS and STOREMANAGER_MANAGER_MAPPING table of the elsie database
+      description: ''
+      operationId: update-storemanager
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        
+        '400':
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /update-supervisor:
+    post:
+      tags:
+        - update-supervisor
+      summary: truncate and insert into  SUPERVISORS and SUPERVISOR_STAFF_MAPPING table of the elsie database
+      description: ''
+      operationId: update-supervisor
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        
+        '400':
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+
+components:
+  
+  schemas:
+    
+    ApiResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
