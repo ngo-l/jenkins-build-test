@@ -81,7 +81,7 @@ spec:
                         echo "repo: ${repoName}"   
                               //config secrets env
                                 DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
-                                env.ENCRYPT_SEC = "devops-deployment-env/update-staff-ids-mapping/production/secrets.enc.env"                              
+                                env.ENCRYPT_SEC = "devops-deployment-env/elsie-serverless-functions/update-staff-ids-mapping/production/secrets.enc.env"                              
                             }                  
 
                           echo "env secrets: ${env.ENCRYPT_SEC}"
