@@ -172,36 +172,36 @@ spec:
           }  
         }
 
-        stage('public endpoint check') {
-            steps {
-                script {
-                         if(env.PROD > 1) {
-                            echo "production endpoint"
-                            env.site = "https://${HOST}/${API_PATH}"
-                          }
-                        else if (env.STAGING > 1) {
-                            echo "staging endpoint"
-                            env.site = "https://${STG_HOST}/${STG_API_PATH}"
-                          }
+        // stage('public endpoint check') {
+        //     steps {
+        //         script {
+        //                  if(env.PROD > 1) {
+        //                     echo "production endpoint"
+        //                     env.site = "https://${HOST}/${API_PATH}"
+        //                   }
+        //                 else if (env.STAGING > 1) {
+        //                     echo "staging endpoint"
+        //                     env.site = "https://${STG_HOST}/${STG_API_PATH}"
+        //                   }
                                                                               
-                            println('URL: '+ "${env.site}")
-                            def response = httpRequest "${env.site}"
-                            println('Status: '+response.status)
-                            env.httpcode = response.status
-                }
-            }
-          } 
+        //                     println('URL: '+ "${env.site}")
+        //                     def response = httpRequest "${env.site}"
+        //                     println('Status: '+response.status)
+        //                     env.httpcode = response.status
+        //         }
+        //     }
+        //   } 
   }
-    post {
-			success {
-				slackSend channel: '#jenkins',
-				color: 'good',
-				 message: "The pipeline ${currentBuild.fullDisplayName}, deploy successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-				}
-			failure {
-				slackSend channel: '#jenkins',
-				color: 'warning',
-				message: "The pipeline ${currentBuild.fullDisplayName}, deploy failed. Check console result at $BUILD_URL."
-				}  
-    }
+    // post {
+		// 	success {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'good',
+		// 		 message: "The pipeline ${currentBuild.fullDisplayName}, deploy successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+		// 		}
+		// 	failure {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'warning',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, deploy failed. Check console result at $BUILD_URL."
+		// 		}  
+    // }
 }

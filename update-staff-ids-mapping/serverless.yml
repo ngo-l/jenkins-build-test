@@ -8,7 +8,7 @@ provider:
   name: azure
   location: East Asia
   runtime: nodejs14
-  stage: ${opt:stage, 'development'}
+  stage: ${opt:stage, 'production'}
   resourceGroup: lc-tech-elsie
   os: linux  
   environment:
