@@ -68,7 +68,7 @@ spec:
                         echo "repo: ${repoName}"   
                               //config secrets env
                                 DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
-                                env.ENCRYPT_SEC = "devops-deployment-env/${repoName}/${DEPLOY}/secrets.enc.env"                              
+                                env.ENCRYPT_SEC = "devops-deployment-env/elsie-admin-portal-frontend/${DEPLOY}/secrets.enc.env"                              
                             }                  
 
                           echo "env secrets: ${env.ENCRYPT_SEC}"
