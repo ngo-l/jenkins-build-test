@@ -1,0 +1,230 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: sops
+    image: betalabsk8sacr.azurecr.io/sops:v2
+    command:
+    - cat
+    tty: true
+
+  - name: yarn
+    image: betalabsk8sacr.azurecr.io/yarn:v1.22
+    resources:
+      requests:
+        cpu: "300m"
+        memory: "2Gi"
+      limits:
+        cpu: "300m"
+        memory: "2Gi"   
+    command:
+    - cat
+    tty: true   
+    
+  - name: azcopy
+    image: betalabsk8sacr.azurecr.io/azcopy:v10.16
+    env:
+     - name: AZCOPY_SPA_CLIENT_SECRET
+       valueFrom:
+         secretKeyRef:
+           name: azid-jenkins-secret
+           key: AZCOPY_SPA_CLIENT_SECRET       
+    securityContext:
+      privileged: true    
+    command:
+    - cat
+    tty: true    
+
+  - name: azcli
+    image: mcr.microsoft.com/azure-cli
+    command:
+    - cat
+    tty: true       
+
+  tolerations:
+  - key: "kubernetes.azure.com/scalesetpriority"
+    operator: "Equal"
+    value: "spot"
+    effect: "NoSchedule"              
+'''
+            defaultContainer 'shell'
+        }
+    }
+
+
+   stages {              
+
+     stage('load env') {
+                  steps {
+                      container('azcli') {
+                      load "Jenkins/Jenkinsenv"  
+
+                      script{  
+                        def repoName = sh(returnStdout: true, script: "echo ${env.GIT_URL} | sed \'s:.*\\/::\' | sed \'s/\\.[^.]*\$//\'").trim() 
+                        echo "repo: ${repoName}"   
+                              //config secrets env
+                                DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
+                                env.ENCRYPT_SEC = "devops-deployment-env/${repoName}/${DEPLOY}/secrets.enc.env"                              
+                            }                  
+
+                          echo "env secrets: ${env.ENCRYPT_SEC}"
+                          echo "branch:${GIT_BRANCH}"               
+                          }
+                  }        
+            }            
+
+    stage('config secret env'){
+            steps {
+              container('sops') {
+                    withCredentials([sshUserPrivateKey(credentialsId: "${CREDENTIALS}", keyFileVariable: 'keyfile')]) {
+                        sh "mkdir ~/.ssh/"
+                        sh 'ssh-agent /bin/bash' 
+                        sh 'ssh-keyscan github.com  >> ~/.ssh/known_hosts' 
+                        sh "eval \"\$(ssh-agent)\" && ssh-add ${keyfile} && ssh-add -l && git clone ${GIT_ENV_REPO}"      
+                        }   
+                      
+                    withCredentials([file(credentialsId: 'jenkins-sops-pvt-key', variable: 'FILE')]) {
+                        sh 'gpg --import $FILE'    
+                        sh "gpg --list-keys"
+                        sh "sops -d ${env.ENCRYPT_SEC} > ${DECRYPT_SEC}"                
+                      }                               
+                 sh "sops -v" 
+                 sh "ls ./"
+                 sh "cat ${env.ENCRYPT_SEC}"                            
+                }
+            }
+        }
+
+
+        stage('staging build') {
+              when{
+                expression {
+                  return env.GIT_BRANCH == "origin/staging" || env.GIT_BRANCH.contains("origin/cicd-")
+                }               
+              }               
+            steps {
+                container('yarn') {
+                    sh 'pwd && ls ./'
+                    sh "yarn install --network-timeout 600000 && yarn build:staging && yarn export"
+                    sh 'ls ${OUTPUT_DIR}'
+                  }
+              script{env.STAGING = 1}                
+           }
+        }
+
+        stage('production build') {
+              when{
+                expression {
+                  return env.GIT_BRANCH == "origin/master"
+                }               
+              }               
+            steps {
+                container('yarn') {
+                    sh 'pwd && ls ./'
+                    sh "yarn install --network-timeout 600000 && yarn build:production && yarn export"
+                    sh 'ls ${OUTPUT_DIR}'
+                  }   
+            script{env.PROD = 1}     
+           }
+        }
+
+
+
+
+        stage('deploy') {
+          steps {
+                script {    
+
+                         if(env.PROD > 1) {
+                            echo "production deploy"
+                            container('azcopy') {
+                              load "${DECRYPT_SEC}"
+                              withCredentials([azureServicePrincipal('azid-jenkins')]) {                       
+                                sh "azcopy login --service-principal --application-id \"${AZURE_CLIENT_ID}\" --tenant-id \"${AZURE_TENANT_ID}\""                      
+                                sh "azcopy sync '${OUTPUT_DIR}' '${WEB_BLOB_URL}${BLOB_SAS}' --delete-destination=true"                    
+                            }
+                          }                            
+                        } 
+                        else if (env.STAGING > 1) {
+                            echo "staging deploy"
+                            container('azcopy') {
+                              load "${DECRYPT_SEC}"                          
+                              withCredentials([azureServicePrincipal('azid-jenkins')]) {                       
+                                sh "azcopy login --service-principal --application-id \"${AZURE_CLIENT_ID}\" --tenant-id \"${AZURE_TENANT_ID}\""                      
+                                sh "azcopy sync '${OUTPUT_DIR}' '${STG_WEB_BLOB_URL}${STG_BLOB_SAS}' --delete-destination=true"                    
+                            }
+                          }
+                        } 
+                        else if (env.STAGING < 1 && env.PROD < 1) {
+                            currentBuild.result = "FAILURE"
+                            echo "Deployment fails, please check."
+                        }
+                } 
+          }  
+        }
+
+       stage('CDN Purge') {
+          steps {
+                script {    
+
+                         if(env.PROD > 1) {
+                            echo "production CDN"
+                            container('azcli') {
+                              withCredentials([azureServicePrincipal('azid-jenkins')]) {
+                                sh 'az login --service-principal -u "${AZURE_CLIENT_ID}" -p "${AZURE_CLIENT_SECRET}" --tenant "${AZURE_TENANT_ID}"'
+                                sh "az cdn endpoint purge --ids '${CDN_ID}' --content-paths '${PURGE_PATH}'"
+                            }
+                          }                            
+                        } 
+                        else if (env.STAGING > 1) {
+                            echo "staging CDN"
+                            container('azcli') {
+                              withCredentials([azureServicePrincipal('azid-jenkins')]) {
+                                sh 'az login --service-principal -u "${AZURE_CLIENT_ID}" -p "${AZURE_CLIENT_SECRET}" --tenant "${AZURE_TENANT_ID}"'
+                                sh "az cdn endpoint purge --ids '${STG_CDN_ID}' --content-paths '${STG_PURGE_PATH}'"
+                            }
+                          }
+                        } 
+
+                } 
+          }  
+        }
+
+        stage('public endpoint check') {
+            steps {
+                script {
+                         if(env.PROD > 1) {
+                            echo "production endpoint"
+                            env.site = "https://${HOST}/${CHK_PATH}"
+                          }
+                        else if (env.STAGING > 1) {
+                            echo "staging endpoint"
+                            env.site = "https://${STG_HOST}/${STG_CHK_PATH}"
+                          }
+                                                                              
+                            println('URL: '+ "${env.site}")
+                            def response = httpRequest "${env.site}"
+                            println('Status: '+response.status)
+                            env.httpcode = response.status
+                }
+            }
+          } 
+
+  }
+    post {
+			success {
+				slackSend channel: '#jenkins',
+				color: 'good',
+				 message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+				}
+			failure {
+				slackSend channel: '#jenkins',
+				color: 'warning',
+				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+				}  
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Clientele Assignment",
+  "userId": "ID",
+  "fileName": "File Name",
+  "status": "Status",
+  "scheduledAt": "Scheduled At",
+  "createdBy": "Created By",
+  "downloadUploadedFile": "Download uploaded file",
+  "reviewChange": "Review changes",
+  "confirmSchedule": "Confirm schedule",
+  "downloadTemplate": "Downlaod Teamplate",
+  "newSchedule": "New Schedule",
+  "newAssignment": "New Assignment",
+  "view": "View",
+  "review": {
+    "name": "Review",
+    "reviewChange": "Review Changes",
+    "confirmSchedule": "Confirm Schedule"
+  },
+  "deleteSchedule": "Delete Schedule",
+  "cancelSchedule": "Cancel Schedule",
+  "uploadAssignmentAlert": {
+    "title": "Upload Assignment?",
+    "content": "The assignment will be effective <bold>immediately</bold> after the upload is complete. Are you sure you want to upload?",
+    "cancel": "Cancel",
+    "upload": "Upload"
+  }
+}
