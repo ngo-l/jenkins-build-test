@@ -215,16 +215,16 @@ spec:
           } 
 
   }
-    post {
-			success {
-				slackSend channel: '#jenkins',
-				color: 'good',
-				 message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-				}
-			failure {
-				slackSend channel: '#jenkins',
-				color: 'warning',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
-				}  
-    }
+    // post {
+		// 	success {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'good',
+		// 		 message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+		// 		}
+		// 	failure {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'warning',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+		// 		}  
+    // }
 }
