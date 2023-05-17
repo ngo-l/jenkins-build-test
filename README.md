@@ -1,6 +1,6 @@
 [![Build Status](http://jenkins.betalabs.ai/buildStatus/icon?job=stg-elsie-admin-portal&subject=Jenkins%20staging%20Build)](http://jenkins.betalabs.ai/blue/organizations/jenkins/stg-elsie-admin-portal/activity)
 
-![example branch parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=feature-1)
+![example branch parameter](http://jenkins.betalabs.ai/blue/organizations/jenkins/elsie-admin-portal/activity)
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
