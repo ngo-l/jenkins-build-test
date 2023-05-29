@@ -1,0 +1,22 @@
+FROM node:18-alpine as base
+
+WORKDIR /app
+COPY package.json /app
+RUN yarn --target_arch=x64 --target_platform=linux --target_libc=glibc
+COPY . .
+ENV PORT $SERVER_PORT
+
+FROM base as dev
+RUN yarn build
+EXPOSE ${PORT}
+CMD [ "yarn", "start:dev" ]
+
+FROM base as stag 
+RUN yarn build
+EXPOSE ${PORT}
+CMD ["node", "dist/main.js"]
+
+FROM base as prod 
+RUN yarn build
+EXPOSE ${PORT}
+CMD ["node", "dist/main.js"]

@@ -5,17 +5,24 @@ TARGET_DIR   = "Jenkins"
 
 //secrets 
 GIT_ENV_REPO = "git@github.com:LCJG-BetaLabs/devops-deployment-env.git"
-DECRYPT_SEC = "secrets.env"
-OUTPUT_DIR = "out"
+ENCRYPT_SEC = "secrets-elsie-backend.enc.env"
+DECRYPT_SEC = "secrets-elsie-backend.env"
 
-//prod env
-CDN_ID       = "/subscriptions/d2a326c1-2b9a-439d-98b0-1e038c7880d6/resourcegroups/lc-tech-elsie/providers/Microsoft.Cdn/profiles/lc-elsie-cdn/endpoints/elsie-admin-portal"
-PURGE_PATH   = "/*"
-HOST         = "elsie-admin-portal.betalabs.ai"
-CHK_PATH     = ""
+//deployment env 
+NS = "elsie"
+APPIMG  = "betalabsk8sacr.azurecr.io/elsie/elsie-backend"
+APPNAME = "elsie-backend"
+APPPORT = '3000'
 
-//stg env
-STG_CDN_ID       = "/subscriptions/d2a326c1-2b9a-439d-98b0-1e038c7880d6/resourcegroups/lc-tech-elsie/providers/Microsoft.Cdn/profiles/lc-elsie-cdn/endpoints/stg-elsie-admin-portal"
-STG_PURGE_PATH   = "/*"
-STG_HOST         = "stg-elsie-admin-portal.betalabs.ai"
-STG_CHK_PATH     = ""
+//staging env
+STG_HOST = "stg-elsie-admin-service.betalabs.ai"
+POD_CMD = "node"
+POD_ARGS = "dist/main.js"
+TARGET_DIR = "Jenkins"
+
+//production env
+PRD_AKS     = "20.239.180.16"
+PRD_HOST    = "elsie-admin-service.betalabs.ai"
+
+//health check
+CHK_PATH = "healthz"

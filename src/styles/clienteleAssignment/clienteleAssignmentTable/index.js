@@ -1,5 +1,0 @@
-export { ClienteleAssignmentTableFilterStyles } from './clienteleAssignmentTableFilterStyles'
-export { ClienteleAssignmentTableHeaderStyles } from './clienteleAssignmentTableHeaderStyles'
-export { ClienteleAssignmentTablePaginationStyles } from './clienteleAssignmentTablePaginationStyles'
-export { ClienteleAssignmentTableRowMenuStyles } from './clienteleAssignmentTableRowMenuStyles'
-export { ClienteleAssignmentTableStyles } from './clienteleAssignmentTableStyles'
