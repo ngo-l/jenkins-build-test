@@ -62,7 +62,7 @@ spec:
                               //config secrets env 
                                 DEPLOY = env.GIT_BRANCH == "origin/master" ? "production" : "staging"
                                 HOST = env.GIT_BRANCH == "origin/master" ? "${PRD_HOST}" : "${STG_HOST}"
-                                env.ENCRYPT_SEC = "devops-deployment-env/${repoName}/${DEPLOY}/${ENCRYPT_SEC}"                              
+                                env.ENCRYPT_SEC = "devops-deployment-env/elsie-backend/${DEPLOY}/${ENCRYPT_SEC}"                              
                             }                  
 
                           echo "env secrets: ${env.ENCRYPT_SEC}"
@@ -326,16 +326,16 @@ spec:
           } 
 
   }
-    post {
-			success {
-				slackSend channel: '#jenkins',
-				color: 'good',
-				 message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
-				}
-			failure {
-				slackSend channel: '#jenkins',
-				color: 'warning',
-				message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
-				}  
-    }
+    // post {
+		// 	success {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'good',
+		// 		 message: "The pipeline ${currentBuild.fullDisplayName}, build successfully. HTTP code:${env.httpcode}. Check console result at $BUILD_URL "
+		// 		}
+		// 	failure {
+		// 		slackSend channel: '#jenkins',
+		// 		color: 'warning',
+		// 		message: "The pipeline ${currentBuild.fullDisplayName}, build failed. Check console result at $BUILD_URL."
+		// 		}  
+    // }
 }
